@@ -66,7 +66,7 @@ export default function Cart() {
           <aside className="side card stack" aria-label="Tóm tắt đơn hàng">
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Tóm tắt đơn hàng</h2>
             <div className="summary-row"><span>Tạm tính ({count} sản phẩm)</span><strong>{formatVnd(subtotal)}</strong></div>
-            <div className="summary-row"><span>Phí vận chuyển</span><span className="muted">Tính ở bước thanh toán</span></div>
+            <div className="summary-row"><span>Phí vận chuyển</span><span className="muted" style={{ textAlign: 'right' }}>Tính khi thanh toán</span></div>
             <hr className="divider" />
             <div className="summary-row"><span style={{ fontWeight: 700, fontSize: 17 }}>Tạm tính</span><span className="summary-total">{formatVnd(subtotal)}</span></div>
             <Link to="/thanh-toan" className="btn btn-accent btn-lg btn-block">

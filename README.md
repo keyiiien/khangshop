@@ -37,24 +37,25 @@
 
 Yêu cầu: Node.js 20 trở lên, MySQL 8.
 
+Các lệnh dưới đây chạy ở thư mục gốc `khangshop/`.
+
 ```bash
-# 1. Cài thư viện
-cd server && npm install
-cd ../client && npm install
+# 1. Cài thư viện (một lần)
+npm install --prefix server
+npm install --prefix client
 
-# 2. Cấu hình kết nối CSDL
-#    Mở server/.env, điền DB_PASSWORD là mật khẩu MySQL của bạn
-#    (nếu chưa có file .env thì sao chép từ .env.example và đặt JWT_SECRET là một chuỗi ngẫu nhiên)
+# 2. Tạo CSDL (một lần): hỏi mật khẩu root của MySQL (gõ ẩn, không lưu lại),
+#    tạo tài khoản MySQL riêng "khangshop" chỉ có quyền trên CSDL khangshop,
+#    ghi server/.env rồi tạo bảng và dữ liệu mẫu
+npm run setup
 
-# 3. Tạo CSDL và dữ liệu mẫu
-cd ../server && npm run db:init      # npm run db:reset để xóa và tạo lại từ đầu
-
-# 4. Chạy (mở 2 cửa sổ dòng lệnh)
-cd server && npm run dev             # API: http://localhost:4000
-cd client && npm run dev             # Website: http://localhost:5173
+# 3. Build giao diện và chạy
+npm run build
+npm start                            # mở http://localhost:4000
 ```
 
-Chạy bản hoàn chỉnh bằng một máy chủ: `cd client && npm run build`, sau đó `cd ../server && npm start` rồi mở http://localhost:4000.
+- Tạo lại dữ liệu mẫu từ đầu: `npm run db:reset`.
+- Khi đang sửa code: `npm run dev:server` và `npm run dev:client` (2 cửa sổ), mở http://localhost:5173.
 
 ## Kiểm thử tự động
 
@@ -62,7 +63,7 @@ Thư mục `tests/` gồm 51 kịch bản kiểm thử API và 20 kịch bản k
 Các kịch bản thay đổi dữ liệu, nên chạy trên CSDL mẫu vừa tạo lại:
 
 ```bash
-cd server && npm run db:reset && npm start      # cửa sổ 1 (client đã build)
+npm run db:reset && npm start                          # cửa sổ 1 (đã npm run build)
 cd tests && npm install && npm run api && npm run ui   # cửa sổ 2
 ```
 

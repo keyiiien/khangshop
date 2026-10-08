@@ -1,0 +1,15 @@
+{
+  "name": "khangshop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Website thương mại điện tử và đặt hàng trực tuyến KhangShop",
+  "scripts": {
+    "setup": "npm run setup --prefix server",
+    "db:init": "npm run db:init --prefix server",
+    "db:reset": "npm run db:reset --prefix server",
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client"
+  }
+}

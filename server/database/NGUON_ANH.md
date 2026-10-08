@@ -3,7 +3,7 @@
 Ảnh tìm qua Openverse (https://openverse.org) và Wikimedia Commons (https://commons.wikimedia.org), đã cắt vuông 700x700 để làm ảnh sản phẩm mẫu.
 
 - CC0, Public Domain: dùng tự do, không bắt buộc ghi nguồn.
-- CC BY, CC BY-SA: dùng tự do kể cả thương mại nhưng phải ghi tác giả và giấy phép như bảng dưới; ảnh đã được cắt khung so với bản gốc.
+- CC BY, CC BY-SA: dùng tự do kể cả thương mại nhưng phải ghi tác giả và giấy phép như bảng dưới; ảnh đã được cắt khung so với bản gốc; riêng ảnh KC-007 đã xóa chữ trên nhãn chai (bản chỉnh sửa giữ giấy phép CC BY-SA 4.0).
 
 | Mã | Sản phẩm | Tên ảnh gốc | Tác giả | Giấy phép | Nguồn | Trang gốc |
 |---|---|---|---|---|---|---|
@@ -43,7 +43,7 @@
 | NT-045 | Nến thơm tinh dầu | Free scented candles image | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/5918405/image-background-christmas-public-domain |
 | AD-046 | Ấm đun siêu tốc 1.7 lít |  | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/6063707/free-public-domain-cc0-photo |
 | BC-047 | Bình pha cà phê kiểu Pháp | French press coffee pour | markolaz | CC BY 2.0 | flickr | https://www.flickr.com/photos/195403219@N08/51984882524 |
-| KC-007 | Kem chống nắng SPF50+ 50ml | it’s spring | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/3337235/free-photo-image-sunscreen-arm-bottle |
+| KC-007 | Kem chống nắng SPF50+ 50ml | Suncademy airless bottle sunscreen citronella active ingredients.jpg | Alpantex | CC BY-SA 4.0 | wikimedia | https://commons.wikimedia.org/wiki/File:Suncademy_airless_bottle_sunscreen_citronella_active_ingredients.jpg |
 | XP-021 | Xà phòng thủ công thiên nhiên (bộ 3 bánh) | Bars handmade soap platter | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/3290012/free-photo-image-birthday-cake-brie |
 | SE-048 | Serum vitamin C 30ml | Dropper bottle, blank retro label | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/11515770/dropper-bottle-blank-retro-label |
 | CT-049 | Bộ cọ trang điểm 7 cây | Makeup Brush | Freestocks.org | CC0 1.0 | stocksnap | https://stocksnap.io/photo/makeup-brush-PZ0Z7K0JRR |
@@ -75,11 +75,11 @@
 | KE-071 | Kéo văn phòng lưỡi thép | Pink Scissors | Mike Birdy | CC0 1.0 | stocksnap | https://stocksnap.io/photo/pink-scissors-X4A4FSCTBM |
 | GN-072 | Giấy note dán nhiều màu | Free blank sticky notes image | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/5907619/photo-image-paper-sticky-notes-public-domain |
 | HB-073 | Hộp bút vải canvas | Pencil case (9416141198).jpg | National Assembly for Wales from Wales | CC BY 2.0 | wikimedia | https://commons.wikimedia.org/wiki/File:Pencil_case_(9416141198).jpg |
-| LB-074 | Lịch để bàn 2027 | Desk calendar 2022 July 11 - 03-53PM.jpeg | Nesnad | CC BY 4.0 | wikimedia | https://commons.wikimedia.org/wiki/File:Desk_calendar_2022_July_11_-_03-53PM.jpeg |
+| LB-074 | Lịch để bàn 2027 | Pens, earphones various trinkets organized | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/3301780/free-photo-image-desk-calendar-alloy-wheel-apparel |
 | SK-075 | Sổ kế hoạch tuần | Writing Hand | Kristin Hardwick | CC0 1.0 | stocksnap | https://stocksnap.io/photo/writing-hand-2FRRD2PUVA |
 | BM-076 | Bút máy ngòi thép | Montblanc Meisterstuck 4810 Fountain Pen | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/6113741/photo-image-public-domain-pen-free |
 | BW-077 | Bộ băng keo washi trang trí | Masking-tape.png | Japanwelt | CC BY-SA 3.0 | wikimedia | https://commons.wikimedia.org/wiki/File:Masking-tape.png |
-| GC-006 | Giày chạy bộ êm nhẹ | Nike Sneakers | Redd Angelo | CC0 1.0 | stocksnap | https://stocksnap.io/photo/nike-sneakers-PNF27F144F |
+| GC-006 | Giày chạy bộ êm nhẹ | Running Shoes | JESHOOTS.com | CC0 1.0 | stocksnap | https://stocksnap.io/photo/running-shoes-645GI8G1W4 |
 | TY-010 | Thảm tập yoga TPE 6mm | Woman Yoga | JESHOOTS.com | CC0 1.0 | stocksnap | https://stocksnap.io/photo/woman-yoga-O5USQD0F3M |
 | DN-020 | Dây nhảy thể dục có đếm số | Jumping rope | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/6018280/jumping-rope-free-public-domain-cc0-photo |
 | TT-078 | Tạ tay 5kg (đôi) | Fitness Weights | Kristin Hardwick | CC0 1.0 | stocksnap | https://stocksnap.io/photo/fitness-weights-FVUO0YIMKH |
@@ -92,7 +92,7 @@
 | BR-085 | Bóng rổ số 7 | Basketball Ball | Matt Moloney | CC0 1.0 | stocksnap | https://stocksnap.io/photo/basketball-ball-XREEJO0CPH |
 | KB-086 | Kính bơi chống mờ | Swimming Pool | Maarten van den Heuvel | CC0 1.0 | stocksnap | https://stocksnap.io/photo/swimming-pool-HQ87QXHCZ6 |
 | HD-024 | Hạt điều rang muối 500g | Free woman peeling cashew nuts | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/5927724/photo-image-public-domain-person-woman |
-| TX-025 | Trà xanh túi lọc (hộp 100 gói) | Free fresh green tea leaf | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/5908327/image-public-domain-plant-green |
+| TX-025 | Trà xanh túi lọc (hộp 100 gói) | Free tea bag image | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/5903985/photo-image-background-public-domain-food |
 | CF-087 | Cà phê hạt rang mộc 500g | Coffee Beans | Anastasia Zhenina | CC0 1.0 | stocksnap | https://stocksnap.io/photo/coffee-beans-X2HTBSJDKF |
 | MO-088 | Mật ong rừng 500ml | Food Honey | Roberta Sorge | CC0 1.0 | stocksnap | https://stocksnap.io/photo/food-honey-TPZVAKR2HA |
 | YM-089 | Yến mạch cán dẹt 1kg |  | — | CC0 1.0 | rawpixel | https://www.rawpixel.com/image/5921094/free-public-domain-cc0-photo |

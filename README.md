@@ -12,6 +12,7 @@
 
 **Khách hàng**
 - Trang chủ: danh mục, sản phẩm giảm giá, gợi ý theo bán chạy / mới về / giá tốt
+- Tìm kiếm: gợi ý sản phẩm ngay khi gõ, tìm không dấu, không cần đúng thứ tự từ
 - Danh sách sản phẩm: tìm kiếm, lọc theo danh mục, khoảng giá, đang giảm giá, còn hàng; sắp xếp; phân trang
 - Chi tiết sản phẩm, sản phẩm tương tự
 - Giỏ hàng (lưu trên trình duyệt, tự đối chiếu giá và tồn kho với máy chủ)
@@ -60,7 +61,7 @@ npm start                            # mở http://localhost:4000
 
 ## Kiểm thử tự động
 
-Thư mục `tests/` gồm 51 kịch bản kiểm thử API và 20 kịch bản kiểm thử giao diện (Chrome không giao diện).
+Thư mục `tests/` gồm 53 kịch bản kiểm thử API và 21 kịch bản kiểm thử giao diện (Chrome không giao diện).
 Các kịch bản thay đổi dữ liệu, nên chạy trên CSDL mẫu vừa tạo lại:
 
 ```bash

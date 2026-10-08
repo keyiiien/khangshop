@@ -62,6 +62,10 @@ await go(page, '/danh-muc/dien-tu?sort=price_asc');
 check('category title', (await page.$eval('.banner h1', (el) => el.textContent)) === 'Điện tử');
 await shot(page, '02-category');
 
+await page.type('#header-q', 'tai ng');
+await page.waitForSelector('.suggest-item', { timeout: 5000 });
+check('search suggestions while typing', (await page.$eval('.suggest-item', (el) => el.textContent)).includes('Tai nghe'));
+await page.keyboard.press('Escape');
 await go(page, '/san-pham?q=tai%20nghe');
 check('search results', (await page.$$('.product-card')).length >= 1);
 

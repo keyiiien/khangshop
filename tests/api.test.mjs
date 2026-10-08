@@ -42,6 +42,10 @@ check('sale filter', sale.data.items.every((p) => p.oldPrice > p.price));
 
 const search = await call('/products?q=' + encodeURIComponent('tai nghe'));
 check('search "tai nghe"', search.data.total >= 1 && search.data.items[0].name.includes('Tai nghe'), JSON.stringify(search.data.items.map((p) => p.name)));
+const noAccent = await call('/products?q=' + encodeURIComponent('dong ho'));
+check('search without accents "dong ho"', noAccent.data.items[0]?.name.startsWith('Đồng hồ'), JSON.stringify(noAccent.data.items.map((p) => p.name)));
+const anyOrder = await call('/products?q=' + encodeURIComponent('nang kem'));
+check('search words in any order', anyOrder.data.items.some((p) => p.sku === 'KC-007'), anyOrder.data.total);
 
 const price = await call('/products?minPrice=200000&maxPrice=500000&limit=100');
 check('price range', price.data.items.every((p) => p.price >= 200000 && p.price <= 500000));

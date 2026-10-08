@@ -23,6 +23,9 @@ const SORTS = {
   discount: '(p.old_price - p.price) / p.old_price DESC, p.id DESC',
 };
 
+const FOLD_D = (column) => `REPLACE(REPLACE(${column}, 'đ', 'd'), 'Đ', 'D')`;
+const foldD = (value) => value.replace(/đ/g, 'd').replace(/Đ/g, 'D');
+
 // Danh sách sản phẩm đang bán, hỗ trợ lọc, sắp xếp, phân trang
 productRouter.get('/', async (req, res) => {
   const { limit, page, offset } = pagination(req.query);
@@ -34,10 +37,15 @@ productRouter.get('/', async (req, res) => {
     where.push('c.slug = ?');
     params.push(category);
   }
+  // Tìm theo từng từ (mỗi từ phải có trong tên, mã hoặc tên danh mục). Collation đã bỏ qua dấu,
+  // riêng "đ" phải đổi tay thành "d" để gõ "dong ho" vẫn ra "Đồng hồ".
   const q = text(req.query.q, 100);
   if (q) {
-    where.push('(p.name LIKE ? OR p.sku LIKE ?)');
-    params.push(`%${escapeLike(q)}%`, `%${escapeLike(q)}%`);
+    for (const word of q.split(/\s+/).slice(0, 8)) {
+      const like = `%${escapeLike(foldD(word))}%`;
+      where.push(`(${FOLD_D('p.name')} LIKE ? OR p.sku LIKE ? OR ${FOLD_D('c.name')} LIKE ?)`);
+      params.push(like, like, like);
+    }
   }
   const minPrice = toInt(req.query.minPrice);
   if (minPrice !== null) {
@@ -53,9 +61,16 @@ productRouter.get('/', async (req, res) => {
   if (req.query.inStock === '1') where.push('p.stock > 0');
 
   const whereSql = where.join(' AND ');
-  const orderBy = SORTS[req.query.sort] ?? SORTS.popular;
+  let orderBy = SORTS[req.query.sort] ?? SORTS.popular;
+  const orderParams = [];
+  if (q && orderBy === SORTS.popular) {
+    // Khi tìm kiếm: tên bắt đầu bằng cụm từ khóa lên đầu, rồi tên chứa nguyên cụm, rồi mới theo bán chạy
+    const phrase = escapeLike(foldD(q));
+    orderBy = `${FOLD_D('p.name')} LIKE ? DESC, ${FOLD_D('p.name')} LIKE ? DESC, ${orderBy}`;
+    orderParams.push(`${phrase}%`, `%${phrase}%`);
+  }
   const [rows] = await pool.query(`${PRODUCT_SELECT} WHERE ${whereSql} ORDER BY ${orderBy} LIMIT ? OFFSET ?`, [
-    ...params, limit, offset,
+    ...params, ...orderParams, limit, offset,
   ]);
   const [[{ total }]] = await pool.query(
     `SELECT COUNT(*) AS total FROM products p JOIN categories c ON c.id = p.category_id WHERE ${whereSql}`,

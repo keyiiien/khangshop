@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import Icon from './Icon.jsx';
+import SearchBox from './SearchBox.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useApi } from '../hooks/useApi.js';
@@ -16,18 +16,9 @@ function Logo() {
 }
 
 function Header() {
-  const navigate = useNavigate();
-  const [params] = useSearchParams();
-  const [q, setQ] = useState(params.get('q') ?? '');
   const { user, logout } = useAuth();
   const { count } = useCart();
   const categories = useApi('/categories');
-
-  function submit(e) {
-    e.preventDefault();
-    const query = q.trim();
-    navigate(query ? `/san-pham?q=${encodeURIComponent(query)}` : '/san-pham');
-  }
 
   return (
     <>
@@ -35,21 +26,7 @@ function Header() {
       <header className="site-header">
         <div className="container header-inner">
           <Logo />
-          <form className="header-search" role="search" onSubmit={submit}>
-            <label htmlFor="header-q" className="visually-hidden">
-              Tìm kiếm sản phẩm
-            </label>
-            <input
-              id="header-q"
-              type="search"
-              placeholder="Hôm nay bạn muốn săn gì?"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-            <button type="submit" aria-label="Tìm kiếm">
-              <Icon name="search" size={20} strokeWidth={2.4} />
-            </button>
-          </form>
+          <SearchBox />
           <nav className="header-actions" aria-label="Tài khoản và giỏ hàng">
             {user ? (
               <>

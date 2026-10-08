@@ -8,9 +8,11 @@ import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
 import { config } from '../src/config.js';
 import { slugify } from '../src/utils.js';
+import { UPLOAD_DIR } from '../src/upload.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const reset = process.argv.includes('--reset');
+const UPLOAD_PRODUCT_DIR = path.join(UPLOAD_DIR, 'products');
 const { database, ...server } = config.db;
 
 // Tài khoản dùng để chạy thử, ghi lại trong README
@@ -20,44 +22,20 @@ const ACCOUNTS = [
 ];
 
 const CATEGORIES = [
-  ['Điện tử', 'Tai nghe, bàn phím, sạc, loa và phụ kiện công nghệ.'],
-  ['Thời trang', 'Áo, mũ, balo và phụ kiện thời trang.'],
-  ['Nhà cửa & Đời sống', 'Đồ gia dụng, nhà bếp và trang trí.'],
-  ['Sức khỏe & Làm đẹp', 'Chăm sóc da và sức khỏe hằng ngày.'],
-  ['Mẹ & Bé', 'Đồ dùng cho mẹ và bé.'],
-  ['Sách & Văn phòng phẩm', 'Sổ, bút và dụng cụ học tập.'],
-  ['Thể thao', 'Dụng cụ và trang phục tập luyện.'],
-  ['Thực phẩm', 'Đồ ăn vặt, trà và thực phẩm khô.'],
+  ['Điện tử', 'Tai nghe, đồng hồ thông minh, bàn phím, sạc và phụ kiện công nghệ.'],
+  ['Thời trang', 'Áo, quần, váy, túi, ví và phụ kiện thời trang.'],
+  ['Nhà cửa & Đời sống', 'Đồ gia dụng, nhà bếp, trang trí và cây cảnh.'],
+  ['Sức khỏe & Làm đẹp', 'Chăm sóc da, tóc, trang điểm và sức khỏe hằng ngày.'],
+  ['Mẹ & Bé', 'Đồ dùng, đồ chơi và quần áo cho bé.'],
+  ['Sách & Văn phòng phẩm', 'Sổ, bút, dụng cụ học tập và văn phòng.'],
+  ['Thể thao', 'Dụng cụ tập luyện, bóng và phụ kiện thể thao.'],
+  ['Thực phẩm', 'Hạt, ngũ cốc, cà phê, trà và thực phẩm khô.'],
 ];
 
-// [mã, tên, danh mục, giá, giá gốc, tồn kho, mô tả, đang bán]
-const PRODUCTS = [
-  ['TN-001', 'Tai nghe Bluetooth chống ồn chủ động', 'Điện tử', 1290000, 1590000, 32, 'Tai nghe chụp tai không dây với chế độ chống ồn chủ động (ANC), kết nối Bluetooth 5.3, sạc qua cổng USB-C. Đệm tai mềm, khung gấp gọn để mang theo.'],
-  ['BP-002', 'Bàn phím cơ không dây', 'Điện tử', 990000, 1290000, 18, 'Bàn phím cơ kết nối Bluetooth và USB, đèn nền, phù hợp cả làm việc và chơi game.'],
-  ['CH-011', 'Chuột không dây yên tĩnh', 'Điện tử', 249000, null, 40, 'Chuột không dây nút bấm êm, pin dùng lâu, kết nối bằng đầu thu USB.'],
-  ['SN-012', 'Củ sạc nhanh 20W cổng USB-C', 'Điện tử', 189000, 230000, 60, 'Củ sạc nhỏ gọn hỗ trợ sạc nhanh 20W cho điện thoại và máy tính bảng.'],
-  ['LO-013', 'Loa Bluetooth chống nước', 'Điện tử', 690000, null, 15, 'Loa di động chống nước, âm thanh mạnh, phù hợp dã ngoại.'],
-  ['CA-014', 'Cáp USB-C bện dù 1m', 'Điện tử', 99000, null, 150, 'Cáp sạc và truyền dữ liệu USB-C, vỏ bện dù bền chắc.'],
-  ['SD-015', 'Sạc dự phòng 10.000mAh', 'Điện tử', 399000, 459000, 25, 'Pin sạc dự phòng dung lượng 10.000mAh, hai cổng sạc.'],
-  ['AT-005', 'Áo thun cotton unisex form rộng', 'Thời trang', 189000, null, 120, 'Áo thun 100% cotton, form rộng, mặc được cho cả nam và nữ.'],
-  ['BL-018', 'Balo laptop 15.6 inch chống nước', 'Thời trang', 459000, null, 30, 'Balo nhiều ngăn, có ngăn chống sốc cho laptop đến 15.6 inch.'],
-  ['MU-019', 'Mũ lưỡi trai kaki', 'Thời trang', 129000, null, 45, 'Mũ lưỡi trai vải kaki, khóa điều chỉnh vòng đầu.'],
-  ['NC-003', 'Nồi chiên không dầu 5 lít', 'Nhà cửa & Đời sống', 1450000, 1890000, 4, 'Nồi chiên không dầu dung tích 5 lít, điều chỉnh nhiệt độ và hẹn giờ.'],
-  ['BG-004', 'Bình giữ nhiệt inox 750ml', 'Nhà cửa & Đời sống', 159000, 199000, 56, 'Bình giữ nhiệt inox hai lớp, giữ nóng và lạnh nhiều giờ.'],
-  ['DB-016', 'Đèn bàn LED chống cận', 'Nhà cửa & Đời sống', 329000, 399000, 22, 'Đèn bàn LED ánh sáng dịu, chỉnh được độ sáng và nhiệt độ màu.'],
-  ['HT-017', 'Bộ 3 hộp thủy tinh đựng thực phẩm', 'Nhà cửa & Đời sống', 279000, null, 35, 'Hộp thủy tinh chịu nhiệt, nắp kín, dùng được trong lò vi sóng.'],
-  ['KC-007', 'Kem chống nắng SPF50+ 50ml', 'Sức khỏe & Làm đẹp', 245000, 290000, 0, 'Kem chống nắng phổ rộng SPF50+, kết cấu mỏng nhẹ.'],
-  ['SR-021', 'Sữa rửa mặt dịu nhẹ 150ml', 'Sức khỏe & Làm đẹp', 165000, null, 48, 'Sữa rửa mặt dịu nhẹ, phù hợp da nhạy cảm.'],
-  ['XD-009', 'Xe đẩy em bé gấp gọn', 'Mẹ & Bé', 1890000, null, 7, 'Xe đẩy gấp gọn một tay, có mái che và giỏ đựng đồ.', false],
-  ['KS-023', 'Khăn sữa cotton (bộ 5 chiếc)', 'Mẹ & Bé', 119000, null, 60, 'Khăn sữa cotton mềm, thấm hút tốt.'],
-  ['ST-008', 'Sổ tay bìa da A5', 'Sách & Văn phòng phẩm', 79000, null, 200, 'Sổ tay khổ A5, bìa da, giấy dày không thấm mực.'],
-  ['BV-022', 'Bộ bút gel 10 màu', 'Sách & Văn phòng phẩm', 59000, null, 90, 'Bộ 10 bút gel nhiều màu, nét 0.5mm.'],
-  ['GC-006', 'Giày chạy bộ êm nhẹ', 'Thể thao', 690000, 890000, 3, 'Giày chạy bộ đế êm, thoáng khí, trọng lượng nhẹ.'],
-  ['TY-010', 'Thảm tập yoga TPE 6mm', 'Thể thao', 199000, 249000, 5, 'Thảm tập yoga chất liệu TPE dày 6mm, chống trượt hai mặt.'],
-  ['DN-020', 'Dây nhảy thể dục có đếm số', 'Thể thao', 89000, null, 70, 'Dây nhảy có bộ đếm số vòng, tay cầm chống trượt.'],
-  ['HD-024', 'Hạt điều rang muối 500g', 'Thực phẩm', 189000, 215000, 40, 'Hạt điều rang muối, đóng hũ 500g.'],
-  ['TX-025', 'Trà xanh túi lọc (hộp 100 gói)', 'Thực phẩm', 99000, null, 55, 'Trà xanh túi lọc tiện lợi, hộp 100 gói.'],
-];
+// Sản phẩm mẫu và ảnh: database/san_pham_mau.json, database/anh-san-pham/<mã>.jpg (nguồn ảnh: NGUON_ANH.md)
+const DATA_DIR = path.join(here, '..', 'database');
+const SEED_IMAGE_DIR = path.join(DATA_DIR, 'anh-san-pham');
+const PRODUCTS = JSON.parse(await fs.readFile(path.join(DATA_DIR, 'san_pham_mau.json'), 'utf8'));
 
 // Đơn hàng mẫu: [số phút trước, tên, sđt, tỉnh, phường, phương thức thanh toán, trạng thái, [[mã SP, SL]], của khách mẫu]
 const ORDERS = [
@@ -112,14 +90,26 @@ async function main() {
     categoryIds[name] = r.insertId;
   }
 
+  // Ảnh mẫu được chép vào uploads/products với tiền tố seed- để dễ dọn khi tạo lại dữ liệu
+  await fs.mkdir(UPLOAD_PRODUCT_DIR, { recursive: true });
+  for (const f of await fs.readdir(UPLOAD_PRODUCT_DIR)) {
+    if (f.startsWith('seed-')) await fs.rm(path.join(UPLOAD_PRODUCT_DIR, f));
+  }
   const products = {};
-  for (const [i, [sku, name, cat, price, oldPrice, stock, description, visible = true]] of PRODUCTS.entries()) {
+  for (const [i, p] of PRODUCTS.entries()) {
+    let imageUrl = null;
+    const image = path.join(SEED_IMAGE_DIR, `${p.sku}.jpg`);
+    if (await fs.access(image).then(() => true, () => false)) {
+      await fs.copyFile(image, path.join(UPLOAD_PRODUCT_DIR, `seed-${p.sku}.jpg`));
+      imageUrl = `/uploads/products/seed-${p.sku}.jpg`;
+    }
     const [r] = await conn.query(
-      `INSERT INTO products (category_id, sku, name, slug, description, price, old_price, stock, is_visible, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW() - INTERVAL ? DAY)`,
-      [categoryIds[cat], sku, name, slugify(name), description, price, oldPrice, stock, visible, PRODUCTS.length - i],
+      `INSERT INTO products (category_id, sku, name, slug, description, price, old_price, stock, image_url, is_visible, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW() - INTERVAL ? DAY)`,
+      [categoryIds[p.cat], p.sku, p.name, slugify(p.name), p.desc, p.price, p.old, p.stock, imageUrl, p.visible ?? true,
+        PRODUCTS.length - i],
     );
-    products[sku] = { id: r.insertId, name, price };
+    products[p.sku] = { id: r.insertId, name: p.name, price: p.price };
   }
 
   for (const [minutesAgo, name, phone, province, ward, payment, status, items, mine] of ORDERS) {

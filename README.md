@@ -54,7 +54,8 @@ npm run build
 npm start                            # mở http://localhost:4000
 ```
 
-- Tạo lại dữ liệu mẫu từ đầu: `npm run db:reset`.
+- Tạo lại dữ liệu mẫu từ đầu: `npm run db:reset` (8 danh mục, 96 sản phẩm có ảnh, 8 đơn hàng mẫu).
+- Ảnh sản phẩm mẫu nằm ở `server/database/anh-san-pham/`, nguồn và giấy phép từng ảnh ghi trong `server/database/NGUON_ANH.md`.
 - Khi đang sửa code: `npm run dev:server` và `npm run dev:client` (2 cửa sổ), mở http://localhost:5173.
 
 ## Kiểm thử tự động
@@ -97,6 +98,9 @@ khangshop/
 │       └── styles.css      Toàn bộ giao diện
 └── server/                 API Express
     ├── database/schema.sql Thiết kế bảng
+    ├── database/san_pham_mau.json  Danh sách sản phẩm mẫu
+    ├── database/anh-san-pham/      Ảnh sản phẩm mẫu (nguồn: NGUON_ANH.md)
+    ├── database/truy_van_mau.sql   Truy vấn mẫu để xem dữ liệu
     ├── scripts/init-db.js  Tạo CSDL + dữ liệu mẫu
     └── src/
         ├── routes/         auth, catalog (danh mục, sản phẩm), orders, admin

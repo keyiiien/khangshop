@@ -31,10 +31,10 @@ const cats = await call('/categories');
 check('categories 8', cats.data.length === 8, JSON.stringify(cats.data?.map((c) => c.slug)));
 
 const all = await call('/products?limit=100');
-check('visible products = 24 (1 hidden)', all.data.total === 24, all.data.total);
+check('visible products = 95 (1 hidden)', all.data.total === 95, all.data.total);
 
 const dien = await call('/products?category=dien-tu&sort=price_asc');
-check('category filter dien-tu', dien.data.items.every((p) => p.category.slug === 'dien-tu') && dien.data.total === 7, dien.data.total);
+check('category filter dien-tu', dien.data.items.every((p) => p.category.slug === 'dien-tu') && dien.data.total === 12, dien.data.total);
 check('sort price_asc', dien.data.items.every((p, i, a) => i === 0 || a[i - 1].price <= p.price));
 
 const sale = await call('/products?sale=1&sort=discount&limit=4');
@@ -47,7 +47,7 @@ const price = await call('/products?minPrice=200000&maxPrice=500000&limit=100');
 check('price range', price.data.items.every((p) => p.price >= 200000 && p.price <= 500000));
 
 const pageTest = await call('/products?limit=5&page=2');
-check('pagination', pageTest.data.items.length === 5 && pageTest.data.page === 2 && pageTest.data.pages === 5);
+check('pagination', pageTest.data.items.length === 5 && pageTest.data.page === 2 && pageTest.data.pages === 19);
 
 const tn = all.data.items.find((p) => p.sku === 'TN-001');
 const detail = await call(`/products/${tn.slug}`);

@@ -54,12 +54,12 @@ export default function Home() {
             <Link
               key={p.id}
               to={`/san-pham/${p.slug}`}
-              className="hero-card"
+              className={i === 0 ? 'hero-card hero-card-back' : 'hero-card'}
               style={i === 0 ? { left: '6%', top: 10, transform: 'rotate(-4deg)' } : { right: '2%', top: 104, transform: 'rotate(5deg)' }}
             >
               <ProductImage product={p} />
               <span className="hero-card-body">
-                {p.name}
+                <span className="hero-card-name">{p.name}</span>
                 <strong>{formatVnd(p.price)}</strong>
               </span>
             </Link>

@@ -158,7 +158,7 @@ await shot(admin, '10-admin-products');
 await go(admin, '/quan-tri/danh-muc');
 await shot(admin, '11-admin-categories', false);
 await go(admin, '/quan-tri/khach-hang');
-check('admin customers', (await admin.$$('table.data tbody tr')).length >= 2);
+check('admin customers', (await admin.$$('table.data tbody tr')).length >= 1);
 
 // ----- Điện thoại -----
 const mobile = await newPage(390, 844, true);

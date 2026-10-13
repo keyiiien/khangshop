@@ -61,6 +61,18 @@ await shot(page, '01-home');
 await go(page, '/danh-muc/dien-tu?sort=price_asc');
 check('category title', (await page.$eval('.banner h1', (el) => el.textContent)) === 'Điện tử');
 await shot(page, '02-category');
+check('product cards show rating line', (await page.$$('.product-card .product-rating')).length === (await page.$$('.product-card')).length);
+
+// Đánh giá sản phẩm: mở một sản phẩm đã có đánh giá trong dữ liệu mẫu
+const reviewed = await page.evaluate(async () => {
+  const data = await (await fetch('/api/products?limit=100')).json();
+  return data.items.find((p) => p.reviewCount > 0);
+});
+await go(page, `/san-pham/${reviewed.slug}`);
+await page.waitForSelector('.review-item');
+check('detail: reviews with average and list', (await page.$eval('.review-avg', (el) => el.textContent.trim())).length > 0
+  && (await page.$$('.review-item')).length >= 1 && (await page.$eval('.detail-rating', (el) => el.textContent)).includes('đánh giá'));
+check('detail: guest is asked to log in before reviewing', (await page.$eval('#danh-gia', (el) => el.textContent)).includes('Đăng nhập'));
 
 await page.type('#header-q', 'tai ng');
 await page.waitForSelector('.suggest-item', { timeout: 5000 });
@@ -97,6 +109,18 @@ await page.type('#tt-ward', 'Phường Hoàng Liệt');
 await page.type('#tt-address', '10 Đường Thử Nghiệm');
 await clickText(page, 'label.option', 'Giao nhanh');
 await clickText(page, 'label.option', 'Chuyển khoản');
+// Mã giảm giá: mã sai báo lỗi, mã đúng trừ tiền ngay trên trang
+const totalBefore = await page.$eval('.summary-total', (el) => el.textContent);
+await page.type('#tt-coupon', 'khongco');
+await page.keyboard.press('Enter');
+await page.waitForSelector('#tt-coupon-error');
+check('checkout: unknown coupon shows error', (await page.$eval('#tt-coupon-error', (el) => el.textContent)).includes('không tồn tại'));
+await page.$eval('#tt-coupon', (el) => el.select());
+await page.type('#tt-coupon', 'khang10');
+await page.keyboard.press('Enter');
+await page.waitForSelector('.coupon-applied');
+check('checkout: coupon applied and total reduced', (await page.$eval('.coupon-applied', (el) => el.textContent)).includes('KHANG10')
+  && (await page.$eval('.summary-total', (el) => el.textContent)) !== totalBefore);
 await page.click('#tt-agree');
 await shot(page, '05-checkout');
 await clickText(page, 'button[type="submit"]', 'Đặt hàng');
@@ -108,6 +132,7 @@ try {
 }
 check('order placed', (await page.$eval('h1', (el) => el.textContent)).includes('Đặt hàng thành công'));
 check('bank info shown', (await page.content()).includes('Thông tin chuyển khoản'));
+check('order shows coupon discount', (await page.content()).includes('Giảm giá (KHANG10)'));
 check('cart cleared', (await page.$eval('.site-header .badge', (el) => el.textContent)) === '0');
 const orderCode = page.url().split('/').pop();
 await shot(page, '06-order-success');
@@ -163,6 +188,20 @@ await go(admin, '/quan-tri/danh-muc');
 await shot(admin, '11-admin-categories', false);
 await go(admin, '/quan-tri/khach-hang');
 check('admin customers', (await admin.$$('table.data tbody tr')).length >= 1);
+
+await go(admin, '/quan-tri/thong-ke');
+await admin.waitForSelector('.rchart-col');
+check('admin revenue report: 30 columns and 4 figures', (await admin.$$('.rchart-col')).length === 30 && (await admin.$$('.kpi')).length === 4);
+await shot(admin, '14-admin-report');
+await clickText(admin, '.report-presets button', '7 ngày');
+await admin.waitForFunction(() => document.querySelectorAll('.rchart-col').length === 7);
+check('admin revenue report: switch to 7 days', true);
+await go(admin, '/quan-tri/ma-giam-gia');
+await admin.waitForSelector('table.data tbody tr');
+check('admin coupons listed', (await admin.$$('table.data tbody tr')).length >= 4);
+await go(admin, '/quan-tri/danh-gia');
+await admin.waitForSelector('table.data tbody tr');
+check('admin reviews listed', (await admin.$$('table.data tbody tr')).length >= 1);
 
 // ----- Điện thoại -----
 const mobile = await newPage(390, 844, true);

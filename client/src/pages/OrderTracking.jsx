@@ -232,6 +232,9 @@ export default function OrderTracking() {
           <hr className="divider" />
           <div className="summary-row"><span>Tạm tính</span><strong>{formatVnd(order.subtotal)}</strong></div>
           <div className="summary-row"><span>Phí vận chuyển</span><strong>{formatVnd(order.shippingFee)}</strong></div>
+          {order.discount > 0 && (
+            <div className="summary-row"><span>Giảm giá ({order.couponCode})</span><strong>−{formatVnd(order.discount)}</strong></div>
+          )}
           <div className="summary-row" style={{ padding: '14px 16px', border: 'var(--border)', borderRadius: 14, background: 'var(--accent)', flexWrap: 'wrap' }}>
             <span style={{ fontWeight: 700 }}>{order.paymentMethod === 'cod' ? 'Cần thanh toán khi nhận hàng' : 'Tổng cộng'}</span>
             <span className="summary-total" style={{ fontSize: 26 }}>{formatVnd(order.total)}</span>

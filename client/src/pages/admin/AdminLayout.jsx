@@ -11,6 +11,9 @@ const MENU = [
   { to: '/quan-tri/san-pham', label: 'Sản phẩm', icon: 'box' },
   { to: '/quan-tri/danh-muc', label: 'Danh mục', icon: 'tag' },
   { to: '/quan-tri/khach-hang', label: 'Khách hàng', icon: 'users' },
+  { to: '/quan-tri/thong-ke', label: 'Thống kê', icon: 'chart' },
+  { to: '/quan-tri/ma-giam-gia', label: 'Mã giảm giá', icon: 'ticket' },
+  { to: '/quan-tri/danh-gia', label: 'Đánh giá', icon: 'star' },
 ];
 
 export default function AdminLayout() {

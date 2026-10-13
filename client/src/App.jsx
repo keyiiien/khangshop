@@ -15,6 +15,9 @@ import Orders from './pages/admin/Orders.jsx';
 import Products from './pages/admin/Products.jsx';
 import Categories from './pages/admin/Categories.jsx';
 import Customers from './pages/admin/Customers.jsx';
+import Reports from './pages/admin/Reports.jsx';
+import Coupons from './pages/admin/Coupons.jsx';
+import AdminReviews from './pages/admin/Reviews.jsx';
 
 const TITLES = {
   '/': 'KhangShop – Mua sắm trực tuyến',
@@ -74,6 +77,9 @@ export default function App() {
           <Route path="san-pham" element={<Products />} />
           <Route path="danh-muc" element={<Categories />} />
           <Route path="khach-hang" element={<Customers />} />
+          <Route path="thong-ke" element={<Reports />} />
+          <Route path="ma-giam-gia" element={<Coupons />} />
+          <Route path="danh-gia" element={<AdminReviews />} />
         </Route>
       </Routes>
     </>

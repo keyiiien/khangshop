@@ -11,6 +11,8 @@ import { HttpError } from './utils.js';
 import authRoutes from './routes/auth.js';
 import { categoryRouter, productRouter } from './routes/catalog.js';
 import orderRoutes from './routes/orders.js';
+import couponRoutes from './routes/coupons.js';
+import reviewRoutes from './routes/reviews.js';
 import adminRoutes from './routes/admin.js';
 
 const CLIENT_DIST = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'client', 'dist');
@@ -44,8 +46,10 @@ export function createApp() {
   });
   app.use('/api/auth', authRoutes);
   app.use('/api/categories', categoryRouter);
+  app.use('/api/products/:slug/reviews', reviewRoutes);
   app.use('/api/products', productRouter);
   app.use('/api/orders', orderRoutes);
+  app.use('/api/coupons', couponRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api', (req, res) => res.status(404).json({ message: 'Không tìm thấy API' }));
 

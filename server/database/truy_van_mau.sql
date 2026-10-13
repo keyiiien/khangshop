@@ -51,3 +51,18 @@ GROUP BY oi.product_name ORDER BY da_ban DESC LIMIT 10;
 
 -- 11. Tài khoản (không lấy cột mật khẩu đã băm)
 SELECT id, full_name AS ho_ten, email, phone, role AS vai_tro, created_at AS ngay_tao FROM users;
+
+-- 12. Mã giảm giá và số lượt đã dùng
+SELECT code, type, value, max_discount, min_order, used_count, usage_limit, expires_at, is_active
+FROM coupons ORDER BY created_at DESC;
+
+-- 13. Điểm đánh giá trung bình của từng sản phẩm (chỉ sản phẩm đã có đánh giá)
+SELECT p.sku, p.name, COUNT(r.id) AS so_danh_gia, ROUND(AVG(r.rating), 1) AS diem_trung_binh
+FROM products p JOIN reviews r ON r.product_id = p.id
+GROUP BY p.id ORDER BY so_danh_gia DESC, diem_trung_binh DESC LIMIT 20;
+
+-- 14. Doanh thu theo ngày trong 30 ngày gần đây (chỉ đơn đã giao)
+SELECT DATE(created_at) AS ngay, COUNT(*) AS so_don, SUM(total) AS doanh_thu, SUM(discount) AS da_giam_gia
+FROM orders
+WHERE status = 'da_giao' AND created_at >= CURDATE() - INTERVAL 29 DAY
+GROUP BY ngay ORDER BY ngay;

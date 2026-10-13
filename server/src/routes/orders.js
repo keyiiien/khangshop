@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import { normalizeCouponCode } from '../services/coupons.js';
 import { changeOrderStatus, createOrder, findOrderByCode, toOrderSummary } from '../services/orders.js';
 import {
   EMAIL_RE, HttpError, PAYMENT_METHODS, PHONE_RE, SHIPPING_METHODS, normalizePhone, text, toInt,
@@ -26,7 +27,7 @@ function readCustomer(body = {}) {
 }
 
 // Gộp các dòng trùng sản phẩm và kiểm tra số lượng
-function readItems(items) {
+export function readItems(items) {
   if (!Array.isArray(items) || items.length === 0) throw new HttpError(400, 'Giỏ hàng đang trống');
   const merged = new Map();
   for (const it of items) {
@@ -48,6 +49,7 @@ router.post('/', optionalAuth, async (req, res) => {
     shippingMethod,
     paymentMethod,
     userId: req.user?.id,
+    couponCode: normalizeCouponCode(req.body.couponCode) || null,
   });
   res.status(201).json(result);
 });

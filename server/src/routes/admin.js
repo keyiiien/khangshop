@@ -5,9 +5,13 @@ import { changeOrderStatus, findOrderByCode, toOrderSummary } from '../services/
 import { PRODUCT_SELECT, toProduct, uniqueSlug } from '../services/products.js';
 import { imageUrlFor, productImageUpload, removeUploadedImage } from '../upload.js';
 import { HttpError, LOW_STOCK, ORDER_STATUSES, escapeLike, pagination, text, toInt } from '../utils.js';
+import promoRoutes from './adminPromo.js';
+import reportRoutes from './adminReports.js';
 
 const router = Router();
 router.use(requireAdmin);
+router.use(reportRoutes);   // thống kê doanh thu
+router.use(promoRoutes);    // mã giảm giá, đánh giá sản phẩm
 
 // ---------- Tổng quan ----------
 

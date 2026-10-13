@@ -187,7 +187,98 @@ const delCat = await call(`/admin/categories/${newCat.data.id}`, { method: 'DELE
 check('delete empty category', delCat.status === 204);
 
 const customers = await call('/admin/customers', { token: adminToken });
-check('customers list', customers.data.length === 2, customers.data.length);
+check('customers list (5 sample + seeded + registered)', customers.data.length === 7, customers.data.length);
+
+// ----- Mã giảm giá -----
+const buyer = { fullName: 'Khách Thử', phone: '0911111111', province: 'Hà Nội', ward: 'Phường Hoàng Liệt', address: '1 Đường Thử' };
+const cheap = (await call('/products?q=CA-014')).data.items[0];
+const coupon = (code) => adminCoupons().then((list) => list.find((c) => c.code === code));
+const adminCoupons = async () => (await call('/admin/coupons', { token: adminToken })).data;
+const placeOrder = (items, extra = {}) => call('/orders', {
+  method: 'POST', token: userToken, body: { customer: buyer, shippingMethod: 'standard', paymentMethod: 'cod', items, ...extra },
+});
+
+const chk = await call('/coupons/check', { method: 'POST', body: { code: ' khang10 ', items: [{ productId: tn.id, quantity: 1 }] } });
+check('coupon check: 10% capped at 50000', chk.status === 200 && chk.data.code === 'KHANG10' && chk.data.discount === 50000, JSON.stringify(chk.data));
+const chkUnknown = await call('/coupons/check', { method: 'POST', body: { code: 'KHONGCO', items: [{ productId: tn.id, quantity: 1 }] } });
+check('coupon unknown 404', chkUnknown.status === 404);
+const chkExpired = await call('/coupons/check', { method: 'POST', body: { code: 'HE2026', items: [{ productId: tn.id, quantity: 1 }] } });
+check('coupon expired 409', chkExpired.status === 409, JSON.stringify(chkExpired.data));
+const chkMin = await call('/coupons/check', { method: 'POST', body: { code: 'KHANG10', items: [{ productId: cheap.id, quantity: 1 }] } });
+check('coupon below minimum order 409', chkMin.status === 409 && cheap.price < 200000, JSON.stringify(chkMin.data));
+
+const usedBefore = (await coupon('GIAM30K')).usedCount;
+const orderC = await placeOrder([{ productId: tn.id, quantity: 1 }], { couponCode: 'giam30k' });
+check('order with fixed coupon', orderC.status === 201 && orderC.data.discount === 30000 && orderC.data.total === tn.price - 30000 + 30000, JSON.stringify(orderC.data));
+const orderCDetail = await call(`/orders/mine/${orderC.data.code}`, { token: userToken });
+check('order keeps coupon code and discount', orderCDetail.data.couponCode === 'GIAM30K' && orderCDetail.data.discount === 30000 && orderCDetail.data.subtotal === tn.price);
+check('coupon usage counted', (await coupon('GIAM30K')).usedCount === usedBefore + 1);
+await call('/orders/cancel', { method: 'POST', body: { code: orderC.data.code, phone: buyer.phone } });
+check('coupon usage returned after cancel', (await coupon('GIAM30K')).usedCount === usedBefore);
+
+const once = await placeOrder([{ productId: cheap.id, quantity: 1 }], { couponCode: 'CHAOBAN' });
+check('single-use coupon: first order ok', once.status === 201 && once.data.discount === Math.floor(cheap.price * 0.15), JSON.stringify(once.data));
+const twice = await placeOrder([{ productId: cheap.id, quantity: 1 }], { couponCode: 'CHAOBAN' });
+check('single-use coupon: second order 409', twice.status === 409, JSON.stringify(twice.data));
+const badCouponOrder = await placeOrder([{ productId: cheap.id, quantity: 1 }], { couponCode: 'KHONGCO' });
+check('order with unknown coupon 404, no order created', badCouponOrder.status === 404);
+await call('/orders/cancel', { method: 'POST', body: { code: once.data.code, phone: buyer.phone } });
+
+const newCoupon = await call('/admin/coupons', { method: 'POST', token: adminToken, body: { code: 'thu50', type: 'percent', value: 50, maxDiscount: 20000, minOrder: 0 } });
+check('admin creates coupon', newCoupon.status === 201 && newCoupon.data.code === 'THU50' && newCoupon.data.state === 'dang_chay', JSON.stringify(newCoupon.data));
+const dupCoupon = await call('/admin/coupons', { method: 'POST', token: adminToken, body: { code: 'THU50', type: 'fixed', value: 10000 } });
+check('duplicate coupon code 409', dupCoupon.status === 409);
+const badCoupon = await call('/admin/coupons', { method: 'POST', token: adminToken, body: { code: 'SAI', type: 'percent', value: 150 } });
+check('coupon percent over 100 rejected 400', badCoupon.status === 400);
+const offCoupon = await call(`/admin/coupons/${newCoupon.data.id}/active`, { method: 'PATCH', token: adminToken, body: { isActive: false } });
+const chkOff = await call('/coupons/check', { method: 'POST', body: { code: 'THU50', items: [{ productId: tn.id, quantity: 1 }] } });
+check('disabled coupon cannot be used', offCoupon.data.state === 'tat' && chkOff.status === 404);
+const delCoupon = await call(`/admin/coupons/${newCoupon.data.id}`, { method: 'DELETE', token: adminToken });
+check('admin deletes coupon', delCoupon.status === 204);
+check('customer cannot manage coupons 403', (await call('/admin/coupons', { token: userToken })).status === 403);
+
+// ----- Đánh giá sản phẩm -----
+const rvPath = `/products/${cheap.slug}/reviews`;
+const rvAnon = await call(rvPath);
+check('reviews public list', rvAnon.status === 200 && rvAnon.data.canReview === false && rvAnon.data.reason === 'login' && typeof rvAnon.data.summary.count === 'number');
+check('review without login 401', (await call(rvPath, { method: 'POST', body: { rating: 5 } })).status === 401);
+const rvEarly = await call(rvPath, { method: 'POST', token: userToken, body: { rating: 5, comment: 'Chưa mua' } });
+check('review before receiving the product 403', rvEarly.status === 403, JSON.stringify(rvEarly.data));
+
+const bought = await placeOrder([{ productId: cheap.id, quantity: 1 }]);
+for (const status of ['da_xac_nhan', 'dang_giao', 'da_giao']) {
+  await call(`/admin/orders/${bought.data.code}/status`, { method: 'PATCH', token: adminToken, body: { status } });
+}
+const rvMine = await call(rvPath, { token: userToken });
+check('can review after delivery', rvMine.data.canReview === true && rvMine.data.mine === null);
+check('review rating out of range 400', (await call(rvPath, { method: 'POST', token: userToken, body: { rating: 6 } })).status === 400);
+const rv1 = await call(rvPath, { method: 'POST', token: userToken, body: { rating: 5, comment: 'Dây chắc chắn, sạc nhanh.' } });
+check('create review', rv1.status === 201 && rv1.data.rating === 5 && rv1.data.author === 'Khách Thử', JSON.stringify(rv1.data));
+const rv2 = await call(rvPath, { method: 'POST', token: userToken, body: { rating: 4, comment: 'Dùng ổn.' } });
+const rvAfter = await call(rvPath, { token: userToken });
+check('second review replaces the first', rv2.status === 200 && rvAfter.data.summary.count === rvAnon.data.summary.count + 1 && rvAfter.data.mine.rating === 4 && rvAfter.data.items[0].mine === true, JSON.stringify(rvAfter.data.summary));
+const rated = (await call(`/products/${cheap.slug}`)).data.product;
+check('product shows rating and review count', rated.reviewCount === rvAfter.data.summary.count && rated.rating === rvAfter.data.summary.average, JSON.stringify({ rating: rated.rating, count: rated.reviewCount }));
+const adminReviews = await call('/admin/reviews?q=' + encodeURIComponent('Khách Thử'), { token: adminToken });
+check('admin review list', adminReviews.data.total === 1 && adminReviews.data.items[0].product.slug === cheap.slug);
+const delReview = await call(`/admin/reviews/${adminReviews.data.items[0].id}`, { method: 'DELETE', token: adminToken });
+check('admin deletes review', delReview.status === 204 && (await call(rvPath)).data.summary.count === rvAnon.data.summary.count);
+
+// ----- Thống kê doanh thu -----
+const report = await call('/admin/reports/revenue', { token: adminToken });
+const sumSeries = (key) => report.data.series.reduce((sum, r) => sum + r[key], 0);
+check('revenue report default 30 days', report.status === 200 && report.data.days === 30 && report.data.groupBy === 'day' && report.data.series.length === 30, JSON.stringify(report.data?.summary));
+check('report series add up to summary', sumSeries('revenue') === report.data.summary.revenue && sumSeries('orderValue') === report.data.summary.orderValue && report.data.summary.revenue > 0);
+check('report top products and categories', report.data.topProducts.length > 0 && report.data.topProducts.every((t, i, a) => i === 0 || a[i - 1].amount >= t.amount) && report.data.byCategory.length > 0);
+const todayOnly = await call(`/admin/reports/revenue?from=${report.data.to}&to=${report.data.to}`, { token: adminToken });
+const statsNow = await call('/admin/stats', { token: adminToken });
+check('one-day report matches dashboard', todayOnly.data.days === 1 && todayOnly.data.summary.orderValue === statsNow.data.todayValue && todayOnly.data.summary.orders - todayOnly.data.summary.cancelled === statsNow.data.todayCount, JSON.stringify(todayOnly.data.summary));
+const byMonth = await call('/admin/reports/revenue?from=2026-01-01&to=2026-06-30', { token: adminToken });
+check('long range grouped by month', byMonth.data.groupBy === 'month' && byMonth.data.series.length === 6);
+check('report from after to 400', (await call('/admin/reports/revenue?from=2026-10-10&to=2026-10-01', { token: adminToken })).status === 400);
+check('report invalid date 400', (await call('/admin/reports/revenue?from=2026-02-31', { token: adminToken })).status === 400);
+check('report range over 366 days 400', (await call('/admin/reports/revenue?from=2024-01-01&to=2026-01-01', { token: adminToken })).status === 400);
+check('customer cannot see reports 403', (await call('/admin/reports/revenue', { token: userToken })).status === 403);
 
 const notFound = await call('/khong-co');
 check('unknown api 404', notFound.status === 404);

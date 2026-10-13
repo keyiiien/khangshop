@@ -1956,6 +1956,402 @@ table.data tr.is-selected td {
   color: var(--muted);
 }
 
+
+/* ---------- Đánh giá sản phẩm ---------- */
+.stars {
+  display: inline-flex;
+  gap: 1px;
+  vertical-align: middle;
+}
+
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.product-rating .muted {
+  font-weight: 400;
+}
+
+.detail-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin-top: 10px;
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.detail-rating:hover span:last-child {
+  text-decoration: underline;
+}
+
+.reviews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px 40px;
+}
+
+.review-side {
+  flex: 1 1 280px;
+  min-width: 0;
+  gap: 18px;
+}
+
+.review-list {
+  flex: 2 1 380px;
+  min-width: 0;
+}
+
+.review-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.review-score {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.review-avg {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.review-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.review-bars li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 10px;
+}
+
+.review-bar {
+  height: 12px;
+  border: var(--border);
+  border-radius: 999px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.review-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.review-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.review-item:first-child {
+  padding-top: 0;
+}
+
+.review-item p {
+  margin: 8px 0 0;
+}
+
+.review-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.review-form {
+  gap: 14px;
+  padding: 18px;
+  border: var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+
+.review-form h3 {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.star-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+.star-picker button {
+  display: flex;
+  padding: 3px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+}
+
+.star-picker button:hover {
+  background: #fff;
+}
+
+.star-picker-text {
+  margin-left: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ---------- Mã giảm giá ---------- */
+.coupon-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coupon-row {
+  display: flex;
+  gap: 8px;
+}
+
+.coupon-row .input {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  text-transform: uppercase;
+}
+
+.coupon-row .input::placeholder {
+  text-transform: none;
+}
+
+.coupon-applied {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+}
+
+.coupon-applied svg {
+  vertical-align: -3px;
+}
+
+.coupon-applied .link-btn {
+  flex: none;
+  white-space: nowrap;
+}
+
+.coupon-code {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Thống kê doanh thu ---------- */
+.report-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 18px;
+}
+
+.report-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-right: auto;
+  align-self: center;
+}
+
+.report-filter .field {
+  flex: 0 1 170px;
+  margin: 0;
+}
+
+.report-filter .input {
+  height: 46px;
+}
+
+.rchart {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-rows: 240px auto;
+  column-gap: 10px;
+}
+
+.rchart-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin: -8px 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  text-align: right;
+}
+
+.rchart-plot {
+  display: grid;
+  gap: 2px;
+  align-items: end;
+  border-bottom: var(--border);
+  background: linear-gradient(to bottom, var(--line) 1px, transparent 1px) 0 0 / 100% 50%;
+}
+
+.rchart-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  border-radius: 6px 6px 0 0;
+}
+
+.rchart-col:hover,
+.rchart-col:focus-visible {
+  background: rgba(17, 17, 17, 0.06);
+}
+
+.rchart-bar {
+  width: 100%;
+  max-width: 24px;
+  border: var(--border);
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: var(--lilac);
+}
+
+.rchart-col:hover .rchart-bar,
+.rchart-col:focus-visible .rchart-bar {
+  background: var(--accent);
+}
+
+.rchart-peak {
+  position: absolute;
+  bottom: calc(var(--h, 0%) + 4px);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rchart-tip {
+  display: none;
+  position: absolute;
+  z-index: 5;
+  bottom: calc(var(--h, 0%) + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border: var(--border);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.rchart-tip strong {
+  font-size: 15px;
+}
+
+.rchart-col.tip-left .rchart-tip {
+  left: 0;
+  transform: none;
+}
+
+.rchart-col.tip-right .rchart-tip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.rchart-col:hover .rchart-tip,
+.rchart-col:focus-visible .rchart-tip {
+  display: flex;
+}
+
+.rchart-col:hover .rchart-peak,
+.rchart-col:focus-visible .rchart-peak {
+  visibility: hidden;
+}
+
+.rchart-labels {
+  grid-column: 2;
+  display: grid;
+  gap: 2px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.rchart-labels span {
+  justify-self: center;
+  white-space: nowrap;
+}
+
+.report-table {
+  margin-top: 18px;
+}
+
+.report-table summary {
+  width: fit-content;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cat-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cat-bars-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.cat-bar {
+  display: block;
+  height: 14px;
+  margin: 6px 0 2px;
+}
+
+.cat-bar span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border: var(--border);
+  border-left: 0;
+  border-radius: 0 4px 4px 0;
+  background: var(--lilac);
+}
+
 @media (max-width: 640px) {
   .hero,
   .success-banner,

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Icon from '../components/Icon.jsx';
 import ProductCard from '../components/ProductCard.jsx';
-import { ErrorBox, Loading, ProductImage, QtyStepper } from '../components/ui.jsx';
+import Reviews from '../components/Reviews.jsx';
+import { ErrorBox, Loading, ProductImage, QtyStepper, Stars } from '../components/ui.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { discountPercent, formatVnd } from '../format.js';
@@ -24,7 +25,7 @@ export default function ProductDetail() {
     if (data) document.title = `${data.product.name} – KhangShop`;
   }, [data]);
 
-  if (loading) return <div className="container page"><Loading /></div>;
+  if (loading && data?.product.slug !== slug) return <div className="container page"><Loading /></div>;
   if (error) {
     return (
       <div className="container page stack">
@@ -76,6 +77,17 @@ export default function ProductDetail() {
           <div>
             <h1>{product.name}</h1>
             <span className="muted" style={{ fontSize: 14 }}>Mã sản phẩm: {product.sku}</span>
+            <a href="#danh-gia" className="detail-rating">
+              {product.reviewCount > 0 ? (
+                <>
+                  <Stars value={product.rating} size={18} />
+                  <strong>{product.rating.toLocaleString('vi-VN')}</strong>
+                  <span>· {product.reviewCount} đánh giá</span>
+                </>
+              ) : (
+                <span>Chưa có đánh giá</span>
+              )}
+            </a>
           </div>
 
           <div className="price-box">
@@ -140,6 +152,8 @@ export default function ProductDetail() {
         <h2 id="h-mo-ta" style={{ fontSize: 24, fontWeight: 800, marginBottom: 14 }}>Mô tả sản phẩm</h2>
         <p className="prose" style={{ margin: 0 }}>{product.description || 'Sản phẩm chưa có mô tả.'}</p>
       </section>
+
+      <Reviews slug={slug} onChange={reload} />
 
       {related.length > 0 && (
         <section className="section" aria-labelledby="h-lien-quan">

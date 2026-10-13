@@ -1,5 +1,6 @@
 import { pool, withTransaction } from '../db.js';
 import { HttpError, NEXT_STATUS, SHIPPING_METHODS, STATUS_LABEL } from '../utils.js';
+import { couponDiscount, findUsableCoupon } from './coupons.js';
 
 export function toOrderSummary(row) {
   return {
@@ -42,6 +43,8 @@ export async function findOrderByCode(code) {
     shippingFee: order.shipping_fee,
     paymentMethod: order.payment_method,
     subtotal: order.subtotal,
+    couponCode: order.coupon_code,
+    discount: order.discount,
     total: order.total,
     createdAt: order.created_at,
     items: items.map((it) => ({
@@ -57,8 +60,18 @@ export async function findOrderByCode(code) {
   };
 }
 
-// Tạo đơn: khóa các dòng sản phẩm, kiểm tra tồn kho, tính tiền ở phía server rồi trừ kho
-export async function createOrder({ customer, shippingMethod, paymentMethod, items, userId }) {
+// Tiền hàng của giỏ theo giá hiện tại trong CSDL (dùng khi khách bấm "Áp dụng" mã giảm giá)
+export async function cartSubtotal(items) {
+  const [products] = await pool.query('SELECT id, price FROM products WHERE id IN (?) AND is_visible = 1', [
+    items.map((it) => it.productId),
+  ]);
+  const price = new Map(products.map((p) => [p.id, p.price]));
+  return items.reduce((sum, it) => sum + (price.get(it.productId) ?? 0) * it.quantity, 0);
+}
+
+// Tạo đơn: khóa các dòng sản phẩm, kiểm tra tồn kho, tính tiền ở phía server rồi trừ kho.
+// Có mã giảm giá thì khóa dòng mã, kiểm tra lại điều kiện và ghi nhận một lượt dùng trong cùng transaction.
+export async function createOrder({ customer, shippingMethod, paymentMethod, items, userId, couponCode }) {
   return withTransaction(async (conn) => {
     const ids = items.map((it) => it.productId);
     const [products] = await conn.query(
@@ -79,15 +92,23 @@ export async function createOrder({ customer, shippingMethod, paymentMethod, ite
     });
 
     const shippingFee = SHIPPING_METHODS[shippingMethod].fee;
+    let discount = 0;
+    let coupon = null;
+    if (couponCode) {
+      coupon = await findUsableCoupon(conn, couponCode, subtotal, { forUpdate: true });
+      discount = couponDiscount(coupon, subtotal);
+      await conn.query('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?', [coupon.id]);
+    }
+    const total = subtotal - discount + shippingFee;
     const tempCode = `T${Date.now()}${Math.floor(Math.random() * 1e4)}`;
     const [result] = await conn.query(
       `INSERT INTO orders (code, user_id, customer_name, phone, email, province, ward, address_detail, note,
-         shipping_method, shipping_fee, payment_method, subtotal, total)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         shipping_method, shipping_fee, payment_method, subtotal, coupon_code, discount, total)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         tempCode, userId ?? null, customer.fullName, customer.phone, customer.email || null, customer.province,
         customer.ward, customer.address, customer.note || null, shippingMethod, shippingFee, paymentMethod,
-        subtotal, subtotal + shippingFee,
+        subtotal, coupon?.code ?? null, discount, total,
       ],
     );
     const orderId = result.insertId;
@@ -108,15 +129,15 @@ export async function createOrder({ customer, shippingMethod, paymentMethod, ite
       orderId, 'cho_xac_nhan', userId ?? null,
     ]);
     const [[{ code }]] = await conn.query('SELECT code FROM orders WHERE id = ?', [orderId]);
-    return { code, total: subtotal + shippingFee };
+    return { code, total, discount };
   });
 }
 
 // Đổi trạng thái đơn. Khách chỉ được hủy khi đơn còn "Chờ xác nhận";
-// quản trị viên được hủy trước khi giao. Hủy đơn sẽ hoàn lại tồn kho.
+// quản trị viên được hủy trước khi giao. Hủy đơn sẽ hoàn lại tồn kho và lượt dùng mã giảm giá.
 export async function changeOrderStatus(code, nextStatus, { actorId = null, customerPhone = null } = {}) {
   return withTransaction(async (conn) => {
-    const [[order]] = await conn.query('SELECT id, status, phone FROM orders WHERE code = ? FOR UPDATE', [code]);
+    const [[order]] = await conn.query('SELECT id, status, phone, coupon_code FROM orders WHERE code = ? FOR UPDATE', [code]);
     if (!order || (customerPhone !== null && order.phone !== customerPhone)) {
       throw new HttpError(404, 'Không tìm thấy đơn hàng');
     }
@@ -131,6 +152,9 @@ export async function changeOrderStatus(code, nextStatus, { actorId = null, cust
         'UPDATE products p JOIN order_items oi ON oi.product_id = p.id SET p.stock = p.stock + oi.quantity WHERE oi.order_id = ?',
         [order.id],
       );
+      if (order.coupon_code) {   // trả lại lượt dùng mã giảm giá
+        await conn.query('UPDATE coupons SET used_count = used_count - 1 WHERE code = ? AND used_count > 0', [order.coupon_code]);
+      }
     }
     await conn.query('INSERT INTO order_status_history (order_id, status, changed_by) VALUES (?, ?, ?)', [
       order.id, nextStatus, actorId,

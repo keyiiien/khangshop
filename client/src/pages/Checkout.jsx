@@ -50,6 +50,10 @@ export default function Checkout() {
     agree: false,
   });
   const [errors, setErrors] = useState({});
+  const [couponInput, setCouponInput] = useState('');
+  const [coupon, setCoupon] = useState(null);       // { code, description, discount } sau khi máy chủ chấp nhận
+  const [couponError, setCouponError] = useState('');
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -67,6 +71,24 @@ export default function Checkout() {
   if (items.length === 0 && !submitting) return <Navigate to="/gio-hang" replace />;
 
   const fee = SHIPPING[form.shippingMethod].fee;
+  const discount = coupon?.discount ?? 0;
+  const cartItems = items.map((it) => ({ productId: it.productId, quantity: it.quantity }));
+
+  async function applyCoupon() {
+    const code = couponInput.trim();
+    if (!code || checkingCoupon) return;
+    setCheckingCoupon(true);
+    setCouponError('');
+    try {
+      setCoupon(await api('/coupons/check', { method: 'POST', body: { code, items: cartItems } }));
+      setCouponInput('');
+    } catch (err) {
+      setCoupon(null);
+      setCouponError(err.message);
+    } finally {
+      setCheckingCoupon(false);
+    }
+  }
   const set = (key) => (e) => {
     setForm({ ...form, [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
     if (errors[key]) setErrors({ ...errors, [key]: undefined });
@@ -98,7 +120,8 @@ export default function Checkout() {
           customer,
           shippingMethod,
           paymentMethod,
-          items: items.map((it) => ({ productId: it.productId, quantity: it.quantity })),
+          items: cartItems,
+          couponCode: coupon?.code,
         },
       });
       const phone = customer.phone.replace(/[\s.-]/g, '');
@@ -223,8 +246,50 @@ export default function Checkout() {
           <hr className="divider" />
           <div className="summary-row"><span>Tạm tính</span><strong>{formatVnd(subtotal)}</strong></div>
           <div className="summary-row"><span>Phí vận chuyển</span><strong>{formatVnd(fee)}</strong></div>
+          {coupon && (
+            <div className="summary-row"><span>Giảm giá ({coupon.code})</span><strong>−{formatVnd(discount)}</strong></div>
+          )}
+          <div className="coupon-box">
+            <label htmlFor="tt-coupon" className="field-label">Mã giảm giá</label>
+            {coupon ? (
+              <p className="alert alert-success coupon-applied" role="status">
+                <span>
+                  <Icon name="check" size={18} strokeWidth={2.6} /> Đã áp dụng <strong>{coupon.code}</strong>
+                  {coupon.description && <span className="cell-sub">{coupon.description}</span>}
+                </span>
+                <button type="button" className="link-btn" onClick={() => setCoupon(null)}>Bỏ mã</button>
+              </p>
+            ) : (
+              <div className="coupon-row">
+                <input
+                  id="tt-coupon"
+                  className="input"
+                  type="text"
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  placeholder="Nhập mã"
+                  value={couponInput}
+                  onChange={(e) => {
+                    setCouponInput(e.target.value);
+                    setCouponError('');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Enter') return;
+                    e.preventDefault();          // Enter ở ô này là áp dụng mã, không phải đặt hàng
+                    applyCoupon();
+                  }}
+                  aria-invalid={couponError ? 'true' : undefined}
+                  aria-describedby={couponError ? 'tt-coupon-error' : undefined}
+                />
+                <button type="button" className="btn" onClick={applyCoupon} disabled={checkingCoupon || !couponInput.trim()}>
+                  {checkingCoupon ? 'Đang kiểm tra…' : 'Áp dụng'}
+                </button>
+              </div>
+            )}
+            {couponError && <span className="field-error" id="tt-coupon-error" role="alert">{couponError}</span>}
+          </div>
           <hr className="divider" />
-          <div className="summary-row"><span style={{ fontSize: 17, fontWeight: 700 }}>Tổng cộng</span><span className="summary-total">{formatVnd(subtotal + fee)}</span></div>
+          <div className="summary-row"><span style={{ fontSize: 17, fontWeight: 700 }}>Tổng cộng</span><span className="summary-total">{formatVnd(subtotal - discount + fee)}</span></div>
           <label className="check">
             <input type="checkbox" id="tt-agree" checked={form.agree} onChange={set('agree')} aria-invalid={errors.agree ? 'true' : undefined} aria-describedby={errors.agree ? 'tt-agree-error' : undefined} />
             <span>Tôi đã kiểm tra thông tin và đồng ý với điều khoản mua hàng của KhangShop.</span>

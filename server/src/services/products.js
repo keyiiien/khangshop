@@ -2,7 +2,8 @@ import { pool } from '../db.js';
 import { slugify } from '../utils.js';
 
 export const PRODUCT_SELECT = `
-  SELECT p.*, c.name AS category_name, c.slug AS category_slug, COALESCE(s.sold, 0) AS sold
+  SELECT p.*, c.name AS category_name, c.slug AS category_slug, COALESCE(s.sold, 0) AS sold,
+    COALESCE(r.review_count, 0) AS review_count, r.rating_avg
   FROM products p
   JOIN categories c ON c.id = p.category_id
   LEFT JOIN (
@@ -10,7 +11,10 @@ export const PRODUCT_SELECT = `
     FROM order_items oi
     JOIN orders o ON o.id = oi.order_id AND o.status <> 'da_huy'
     GROUP BY oi.product_id
-  ) s ON s.product_id = p.id`;
+  ) s ON s.product_id = p.id
+  LEFT JOIN (
+    SELECT product_id, COUNT(*) AS review_count, AVG(rating) AS rating_avg FROM reviews GROUP BY product_id
+  ) r ON r.product_id = p.id`;
 
 export function toProduct(row) {
   return {
@@ -25,6 +29,8 @@ export function toProduct(row) {
     imageUrl: row.image_url,
     isVisible: Boolean(row.is_visible),
     sold: Number(row.sold ?? 0),
+    rating: row.rating_avg === null || row.rating_avg === undefined ? null : Math.round(Number(row.rating_avg) * 10) / 10,
+    reviewCount: Number(row.review_count ?? 0),
     category: { id: row.category_id, name: row.category_name, slug: row.category_slug },
     createdAt: row.created_at,
   };

@@ -38,6 +38,24 @@ CREATE TABLE products (
   INDEX idx_products_category (category_id)
 ) ENGINE = InnoDB;
 
+-- Mã giảm giá: percent = giảm theo % (value 1-100, có thể giới hạn số tiền giảm tối đa), fixed = giảm số tiền cố định
+CREATE TABLE coupons (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  code         VARCHAR(30)  NOT NULL UNIQUE,
+  description  VARCHAR(255) NULL,
+  type         ENUM('percent', 'fixed') NOT NULL,
+  value        INT UNSIGNED NOT NULL,
+  max_discount INT UNSIGNED NULL,
+  min_order    INT UNSIGNED NOT NULL DEFAULT 0,
+  usage_limit  INT UNSIGNED NULL,
+  used_count   INT UNSIGNED NOT NULL DEFAULT 0,
+  starts_at    DATETIME NULL,
+  expires_at   DATETIME NULL,
+  is_active    TINYINT(1) NOT NULL DEFAULT 1,
+  created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_coupons_value CHECK (value > 0 AND (type = 'fixed' OR value <= 100))
+) ENGINE = InnoDB;
+
 CREATE TABLE orders (
   id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   code            VARCHAR(20)  NOT NULL UNIQUE,
@@ -53,6 +71,8 @@ CREATE TABLE orders (
   shipping_fee    INT UNSIGNED NOT NULL,
   payment_method  ENUM('cod', 'bank') NOT NULL,
   subtotal        INT UNSIGNED NOT NULL,
+  coupon_code     VARCHAR(30)  NULL,
+  discount        INT UNSIGNED NOT NULL DEFAULT 0,
   total           INT UNSIGNED NOT NULL,
   status          ENUM('cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'da_giao', 'da_huy') NOT NULL DEFAULT 'cho_xac_nhan',
   created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -83,4 +103,19 @@ CREATE TABLE order_status_history (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_history_order FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
   CONSTRAINT fk_history_user FOREIGN KEY (changed_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+-- Đánh giá sản phẩm: mỗi khách một đánh giá cho một sản phẩm, chỉ khi đã có đơn giao thành công chứa sản phẩm đó
+CREATE TABLE reviews (
+  id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  product_id INT UNSIGNED NOT NULL,
+  user_id    INT UNSIGNED NOT NULL,
+  rating     TINYINT UNSIGNED NOT NULL,
+  comment    VARCHAR(1000) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_reviews_product FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE,
+  CONSTRAINT fk_reviews_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT uq_reviews_product_user UNIQUE (product_id, user_id),
+  CONSTRAINT chk_reviews_rating CHECK (rating BETWEEN 1 AND 5)
 ) ENGINE = InnoDB;

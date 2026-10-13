@@ -15,8 +15,10 @@
 - Tìm kiếm: gợi ý sản phẩm ngay khi gõ, tìm không dấu, không cần đúng thứ tự từ
 - Danh sách sản phẩm: tìm kiếm, lọc theo danh mục, khoảng giá, đang giảm giá, còn hàng; sắp xếp; phân trang
 - Chi tiết sản phẩm, sản phẩm tương tự
+- Đánh giá sản phẩm: điểm trung bình, số đánh giá theo từng mức sao; khách đã nhận hàng được chấm 1–5 sao kèm nhận xét, sửa hoặc xóa đánh giá của mình
 - Giỏ hàng (lưu trên trình duyệt, tự đối chiếu giá và tồn kho với máy chủ)
 - Đặt hàng không cần đăng nhập; chọn giao tiêu chuẩn/giao nhanh, thanh toán COD/chuyển khoản
+- Mã giảm giá ở trang thanh toán (giảm theo % có mức tối đa hoặc giảm số tiền cố định)
 - Theo dõi đơn theo mã đơn + số điện thoại; tự hủy đơn khi đơn còn "Chờ xác nhận"
 - Đăng ký, đăng nhập, xem "Đơn hàng của tôi"
 
@@ -26,6 +28,9 @@
 - Sản phẩm: thêm/sửa/xóa, tải ảnh, ẩn/hiện, theo dõi tồn kho
 - Danh mục: thêm/sửa/xóa (không cho xóa danh mục còn sản phẩm)
 - Khách hàng: danh sách tài khoản, số đơn, tổng tiền đã mua
+- Thống kê doanh thu theo khoảng thời gian: doanh thu, giá trị đơn, trung bình mỗi đơn, đơn hủy; biểu đồ theo ngày/tháng; sản phẩm bán chạy; doanh số theo danh mục
+- Mã giảm giá: thêm/sửa/xóa, bật/tắt, đơn tối thiểu, giới hạn lượt dùng, thời hạn
+- Đánh giá: xem, tìm, lọc theo số sao và xóa đánh giá không phù hợp
 
 **Quy tắc nghiệp vụ chính (xử lý ở máy chủ)**
 - Giá và tổng tiền luôn tính lại ở máy chủ, không tin giá gửi từ trình duyệt
@@ -33,6 +38,9 @@
 - Luồng trạng thái: Chờ xác nhận → Đã xác nhận → Đang giao → Đã giao; chỉ được đi tới bước kế tiếp
 - Hủy đơn: khách hủy được khi "Chờ xác nhận", quản trị viên hủy được trước khi giao; hủy thì hoàn lại kho
 - Mỗi lần đổi trạng thái được ghi vào bảng `order_status_history`
+- Mã giảm giá chỉ giảm trên tiền hàng; khi đặt hàng máy chủ khóa dòng mã, kiểm tra lại điều kiện và tăng số lượt dùng trong cùng transaction; hủy đơn thì trả lại lượt dùng
+- Chỉ tài khoản có đơn đã giao chứa sản phẩm mới được đánh giá; mỗi tài khoản một đánh giá cho một sản phẩm
+- Doanh thu chỉ tính đơn đã giao; giá trị đơn hàng tính mọi đơn không bị hủy
 
 ## Cài đặt và chạy
 
@@ -55,13 +63,13 @@ npm run build
 npm start                            # mở http://localhost:4000
 ```
 
-- Tạo lại dữ liệu mẫu từ đầu: `npm run db:reset` (8 danh mục, 96 sản phẩm có ảnh, 8 đơn hàng mẫu).
+- Tạo lại dữ liệu mẫu từ đầu: `npm run db:reset` (8 danh mục, 96 sản phẩm có ảnh, 8 đơn hàng đang xử lý, lịch sử 40 đơn trong 30 ngày của 5 khách hàng mẫu, 50 đánh giá, 4 mã giảm giá: `KHANG10`, `GIAM30K`, `CHAOBAN`, `HE2026` đã hết hạn).
 - Ảnh sản phẩm mẫu nằm ở `server/database/anh-san-pham/`, nguồn và giấy phép từng ảnh ghi trong `server/database/NGUON_ANH.md`.
 - Khi đang sửa code: `npm run dev:server` và `npm run dev:client` (2 cửa sổ), mở http://localhost:5173.
 
 ## Kiểm thử tự động
 
-Thư mục `tests/` gồm 53 kịch bản kiểm thử API và 21 kịch bản kiểm thử giao diện (Chrome không giao diện).
+Thư mục `tests/` gồm 89 kịch bản kiểm thử API và 31 kịch bản kiểm thử giao diện (Chrome không giao diện).
 Các kịch bản thay đổi dữ liệu, nên chạy trên CSDL mẫu vừa tạo lại:
 
 ```bash
@@ -104,8 +112,9 @@ khangshop/
     ├── database/truy_van_mau.sql   Truy vấn mẫu để xem dữ liệu
     ├── scripts/init-db.js  Tạo CSDL + dữ liệu mẫu
     └── src/
-        ├── routes/         auth, catalog (danh mục, sản phẩm), orders, admin
-        ├── services/       Nghiệp vụ đơn hàng, sản phẩm
+        ├── routes/         auth, catalog (danh mục, sản phẩm), orders, coupons, reviews,
+        │                   admin, adminReports (thống kê), adminPromo (mã giảm giá, đánh giá)
+        ├── services/       Nghiệp vụ đơn hàng, sản phẩm, mã giảm giá
         ├── middleware/     Xác thực JWT, phân quyền
         └── upload.js       Tải ảnh sản phẩm
 ```
@@ -121,7 +130,11 @@ khangshop/
 | GET | `/api/products` | Danh sách sản phẩm (`q, category, minPrice, maxPrice, sale, inStock, sort, page, limit`) |
 | GET | `/api/products/batch?ids=` | Giá, tồn kho mới nhất cho giỏ hàng |
 | GET | `/api/products/:slug` | Chi tiết sản phẩm + sản phẩm tương tự |
-| POST | `/api/orders` | Đặt hàng |
+| GET | `/api/products/:slug/reviews` | Đánh giá của sản phẩm: điểm trung bình, phân bố sao, danh sách |
+| POST | `/api/products/:slug/reviews` | Gửi hoặc sửa đánh giá của mình (cần đăng nhập, đã nhận hàng) |
+| DELETE | `/api/products/:slug/reviews/mine` | Xóa đánh giá của mình |
+| POST | `/api/coupons/check` | Kiểm tra mã giảm giá với giỏ hàng hiện tại |
+| POST | `/api/orders` | Đặt hàng (có thể kèm `couponCode`) |
 | POST | `/api/orders/lookup` | Tra cứu đơn (mã đơn + số điện thoại) |
 | POST | `/api/orders/cancel` | Khách hủy đơn |
 | GET | `/api/orders/mine` | Đơn của tài khoản đang đăng nhập |
@@ -130,7 +143,10 @@ khangshop/
 | GET/POST/PUT/PATCH/DELETE | `/api/admin/products…` | Quản lý sản phẩm |
 | GET/POST/PUT/DELETE | `/api/admin/categories…` | Quản lý danh mục |
 | GET | `/api/admin/customers` | Danh sách khách hàng |
+| GET | `/api/admin/reports/revenue?from=&to=` | Thống kê doanh thu theo khoảng thời gian (tối đa 366 ngày) |
+| GET/POST/PUT/PATCH/DELETE | `/api/admin/coupons…` | Quản lý mã giảm giá |
+| GET/DELETE | `/api/admin/reviews…` | Xem và xóa đánh giá |
 
 ## Hướng phát triển
 
-Đánh giá sản phẩm, mã giảm giá, thanh toán trực tuyến (VNPay/MoMo sandbox), quên mật khẩu qua email, nhiều ảnh cho một sản phẩm, giới hạn số lần tra cứu đơn để chống dò mã.
+Thanh toán trực tuyến (VNPay/MoMo sandbox), gửi email xác nhận đơn, quên mật khẩu qua email, nhiều ảnh cho một sản phẩm, giới hạn số lần tra cứu đơn để chống dò mã.

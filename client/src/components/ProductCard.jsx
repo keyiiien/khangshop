@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from './Icon.jsx';
-import { ProductImage } from './ui.jsx';
+import { ProductImage, Stars } from './ui.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { discountPercent, formatVnd } from '../format.js';
 
@@ -29,6 +29,16 @@ export default function ProductCard({ product }) {
         <Link to={url} className="product-name">
           {product.name}
         </Link>
+        <span className="product-rating">
+          {product.reviewCount > 0 ? (
+            <>
+              <Stars value={product.rating} size={14} label={`${product.rating} trên 5 sao`} />
+              <span>{product.rating.toLocaleString('vi-VN')} ({product.reviewCount})</span>
+            </>
+          ) : (
+            <span className="muted">Chưa có đánh giá</span>
+          )}
+        </span>
         <div className="price-row">
           <span className="price">{formatVnd(product.price)}</span>
           {product.oldPrice && <span className="price-old">{formatVnd(product.oldPrice)}</span>}

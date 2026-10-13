@@ -73,6 +73,9 @@ function OrderDetail({ code, onChanged }) {
       <div className="stack" style={{ gap: 6, fontSize: 14 }}>
         <div className="summary-row"><span>Tạm tính</span><span>{formatVnd(order.subtotal)}</span></div>
         <div className="summary-row"><span>Phí vận chuyển</span><span>{formatVnd(order.shippingFee)}</span></div>
+        {order.discount > 0 && (
+          <div className="summary-row"><span>Giảm giá ({order.couponCode})</span><span>−{formatVnd(order.discount)}</span></div>
+        )}
         <div className="summary-row"><strong style={{ fontSize: 15 }}>Tổng cộng</strong><strong style={{ fontSize: 22 }}>{formatVnd(order.total)}</strong></div>
       </div>
       <details style={{ fontSize: 14 }}>

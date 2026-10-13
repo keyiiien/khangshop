@@ -13,6 +13,26 @@ export function ProductImage({ product, iconSize = 40, className = '' }) {
   );
 }
 
+// Năm ngôi sao, tô vàng theo điểm đã làm tròn
+export function Stars({ value = 0, size = 16, label }) {
+  const full = Math.round(value);
+  return (
+    <span className="stars" role="img" aria-label={label ?? `${value} trên 5 sao`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <svg key={n} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path
+            d="m12 2.8 2.9 5.9 6.4.9-4.6 4.5 1.1 6.4L12 17.5l-5.8 3 1.1-6.4-4.6-4.5 6.4-.9z"
+            fill={n <= full ? 'var(--accent)' : '#fff'}
+            stroke="var(--ink)"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
 export function QtyStepper({ value, min = 1, max = 99, onChange, label }) {
   return (
     <div className="qty" role="group" aria-label={`Số lượng ${label}`}>

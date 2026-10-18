@@ -15,17 +15,20 @@ const SERVER_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.
 const ENV_PATH = path.join(SERVER_DIR, '.env');
 const APP_USER = 'khangshop';
 
+// Một giao diện đọc dòng dùng chung cho mọi câu hỏi; câu hỏi mật khẩu hiện dấu * thay cho ký tự gõ
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
+let hiddenPrompt = null;
+rl._writeToOutput = (s) => {
+  if (!hiddenPrompt) rl.output.write(s);
+  else if (s.startsWith(hiddenPrompt)) rl.output.write(hiddenPrompt);
+  else if (s.includes('\n') || s.includes('\r')) rl.output.write('\n');
+  else rl.output.write('*'.repeat(s.length));
+};
+
 function ask(question, { hidden = false } = {}) {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
-  if (hidden) {
-    rl._writeToOutput = (s) => {
-      if (s.startsWith(question)) rl.output.write(question);
-      else if (s.includes('\n') || s.includes('\r')) rl.output.write('\n');
-      else rl.output.write('*'.repeat(s.length));
-    };
-  }
+  hiddenPrompt = hidden ? question : null;
   return new Promise((resolve) => rl.question(question, (answer) => {
-    rl.close();
+    hiddenPrompt = null;
     resolve(answer);
   }));
 }
@@ -61,6 +64,7 @@ if (!admin) {
   console.log('Đã thử 3 lần không thành công. Chạy lại "npm run setup" khi nhớ mật khẩu.');
   process.exit(1);
 }
+rl.close();
 
 // Tài khoản riêng cho website, chỉ có quyền trên CSDL của website
 const appPassword = crypto.randomBytes(18).toString('base64url');

@@ -42,30 +42,74 @@
 - Chỉ tài khoản có đơn đã giao chứa sản phẩm mới được đánh giá; mỗi tài khoản một đánh giá cho một sản phẩm
 - Doanh thu chỉ tính đơn đã giao; giá trị đơn hàng tính mọi đơn không bị hủy
 
-## Cài đặt và chạy
+## Cài đặt và chạy trên máy của bạn
 
-Yêu cầu: Node.js 20 trở lên, MySQL 8.
+### 1. Cài phần mềm cần có (một lần)
 
-Các lệnh dưới đây chạy ở thư mục gốc `khangshop/`.
+| Phần mềm | Phiên bản | Tải ở đâu | Ghi chú |
+|---|---|---|---|
+| Node.js | 22 LTS hoặc mới hơn (tối thiểu 20.19) | https://nodejs.org | Chọn bản LTS, cài mặc định |
+| MySQL Server | 8.0 trở lên (khuyên dùng 8.4 LTS) | https://dev.mysql.com/downloads/mysql/ | **Nhớ mật khẩu root** đặt lúc cài |
+| Git (không bắt buộc) | bất kỳ | https://git-scm.com | Không có Git thì tải file ZIP ở bước 2 |
+
+Kiểm tra đã cài xong: mở Terminal (Windows: PowerShell hoặc Command Prompt), gõ `node -v` phải ra `v22…` trở lên.
+MySQL phải đang chạy (Windows: mở **Services**, dịch vụ tên `MySQL84` hoặc `MySQL80` ở trạng thái *Running*).
+
+### 2. Tải mã nguồn
+
+Cách 1 – có Git:
 
 ```bash
-# 1. Cài thư viện (một lần)
-npm install --prefix server
-npm install --prefix client
-
-# 2. Tạo CSDL (một lần): hỏi mật khẩu root của MySQL (gõ ẩn, không lưu lại),
-#    tạo tài khoản MySQL riêng "khangshop" chỉ có quyền trên CSDL khangshop,
-#    ghi server/.env rồi tạo bảng và dữ liệu mẫu
-npm run setup
-
-# 3. Build giao diện và chạy
-npm run build
-npm start                            # mở http://localhost:4000
+git clone https://github.com/keyiiien/khangshop.git
+cd khangshop
 ```
 
-- Tạo lại dữ liệu mẫu từ đầu: `npm run db:reset` (8 danh mục, 96 sản phẩm có ảnh, 8 đơn hàng đang xử lý, lịch sử 40 đơn trong 30 ngày của 5 khách hàng mẫu, 50 đánh giá, 4 mã giảm giá: `KHANG10`, `GIAM30K`, `CHAOBAN`, `HE2026` đã hết hạn).
-- Ảnh sản phẩm mẫu nằm ở `server/database/anh-san-pham/`, nguồn và giấy phép từng ảnh ghi trong `server/database/NGUON_ANH.md`.
+Cách 2 – không có Git: trên trang GitHub bấm **Code → Download ZIP**, giải nén, mở Terminal trong thư mục
+`khangshop-main` vừa giải nén.
+
+### 3. Cài đặt và chạy (gõ lần lượt trong thư mục `khangshop`)
+
+```bash
+npm install          # cài thư viện cho cả máy chủ và giao diện (mất 1–2 phút)
+npm run setup        # tạo CSDL và dữ liệu mẫu, hỏi mật khẩu root của MySQL
+npm run build        # đóng gói giao diện
+npm start            # chạy website
+```
+
+Mở trình duyệt vào **http://localhost:4000**. Đăng nhập trang quản trị bằng tài khoản ở mục
+[Tài khoản dùng thử](#tài-khoản-dùng-thử). Dừng website: bấm `Ctrl + C` trong cửa sổ Terminal.
+
+`npm run setup` làm những việc sau:
+
+- hỏi tài khoản quản trị MySQL (nhấn Enter để dùng `root`) và mật khẩu (gõ không hiện ký tự, không được lưu lại);
+- tạo tài khoản MySQL riêng tên `khangshop` với mật khẩu ngẫu nhiên, chỉ có quyền trên CSDL `khangshop`;
+- ghi thông tin kết nối vào `server/.env` (tệp này chỉ nằm trên máy bạn, không đưa lên GitHub);
+- tạo bảng, chép ảnh sản phẩm mẫu và tạo dữ liệu mẫu.
+
+Những lần sau chỉ cần `npm start` (đã cài và build rồi). Nếu tải bản mã nguồn mới thì chạy lại `npm install` và
+`npm run build`; nếu bản mới có thay đổi bảng CSDL thì chạy thêm `npm run db:reset`.
+
+### Lệnh khác
+
+- Tạo lại dữ liệu mẫu từ đầu (xóa hết dữ liệu đang có): `npm run db:reset`. Dữ liệu mẫu gồm 8 danh mục, 96 sản phẩm
+  có ảnh, 8 đơn hàng đang xử lý, lịch sử 40 đơn trong 30 ngày của 5 khách hàng mẫu, 50 đánh giá, 4 mã giảm giá:
+  `KHANG10`, `GIAM30K`, `CHAOBAN`, `HE2026` (đã hết hạn).
 - Khi đang sửa code: `npm run dev:server` và `npm run dev:client` (2 cửa sổ), mở http://localhost:5173.
+- Xem dữ liệu bằng MySQL Workbench: các câu truy vấn mẫu ở `server/database/truy_van_mau.sql`.
+- Ảnh sản phẩm mẫu nằm ở `server/database/anh-san-pham/`, nguồn và giấy phép từng ảnh ghi trong
+  `server/database/NGUON_ANH.md`.
+
+### Gặp lỗi
+
+| Thông báo | Cách xử lý |
+|---|---|
+| `'node' is not recognized…` / `'npm' is not recognized…` | Chưa cài Node.js, hoặc cần đóng và mở lại Terminal sau khi cài |
+| Lỗi khi `npm run build` có nhắc đến phiên bản Node | Node.js quá cũ, cài bản 22 LTS |
+| `Không kết nối được MySQL … ECONNREFUSED` | MySQL chưa chạy: bật dịch vụ MySQL trong Services. MySQL dùng cổng khác 3306 thì tạo `server/.env` có dòng `DB_PORT=<cổng>` rồi chạy lại `npm run setup` |
+| `Sai mật khẩu, thử lại` | Gõ đúng mật khẩu root đặt lúc cài MySQL; nếu root không có mật khẩu thì nhấn Enter |
+| `Chưa có cấu hình server/.env` | Chưa chạy `npm run setup` |
+| `Cổng 4000 đang bị chương trình khác dùng` | Website đã chạy ở cửa sổ khác, hoặc đổi `PORT=` trong `server/.env` |
+| Trang web không có ảnh sản phẩm | Chạy `npm run db:reset` để chép lại ảnh mẫu |
 
 ## Kiểm thử tự động
 

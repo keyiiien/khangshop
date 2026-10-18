@@ -45,8 +45,16 @@ for (let attempt = 1; attempt <= 3 && !admin; attempt += 1) {
   try {
     admin = await mysql.createConnection({ host, port, user: adminUser, password });
   } catch (err) {
-    console.log(err.code === 'ER_ACCESS_DENIED_ERROR' ? '  Sai mật khẩu, thử lại.' : `  Không kết nối được MySQL: ${err.message}`);
-    if (err.code !== 'ER_ACCESS_DENIED_ERROR') process.exit(1);
+    if (err.code === 'ER_ACCESS_DENIED_ERROR') {
+      console.log('  Sai mật khẩu, thử lại. (Là mật khẩu đặt lúc cài MySQL; root không có mật khẩu thì nhấn Enter.)');
+      continue;
+    }
+    console.log(`  Không kết nối được MySQL ở ${host}:${port}: ${err.message}`);
+    if (err.code === 'ECONNREFUSED') {
+      console.log('  MySQL chưa chạy hoặc chạy ở cổng khác. Trên Windows: mở Services, bật dịch vụ MySQL (ví dụ MySQL84);');
+      console.log('  nếu MySQL dùng cổng khác 3306, tạo file server/.env có dòng DB_PORT=<cổng> rồi chạy lại.');
+    }
+    process.exit(1);
   }
 }
 if (!admin) {

@@ -16,5 +16,6 @@ export const config = {
 };
 
 if (!config.jwtSecret) {
-  throw new Error('Thiếu JWT_SECRET trong file server/.env (xem .env.example)');
+  console.error('Chưa có cấu hình server/.env. Chạy "npm run setup" ở thư mục khangshop trước (xem README).');
+  process.exit(1);
 }

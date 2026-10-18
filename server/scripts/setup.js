@@ -52,7 +52,7 @@ for (let attempt = 1; attempt <= 3 && !admin; attempt += 1) {
       console.log('  Sai mật khẩu, thử lại. (Là mật khẩu đặt lúc cài MySQL; root không có mật khẩu thì nhấn Enter.)');
       continue;
     }
-    console.log(`  Không kết nối được MySQL ở ${host}:${port}: ${err.message}`);
+    console.log(`  Không kết nối được MySQL ở ${host}:${port}: ${err.message || err.code}`);
     if (err.code === 'ECONNREFUSED') {
       console.log('  MySQL chưa chạy hoặc chạy ở cổng khác. Trên Windows: mở Services, bật dịch vụ MySQL (ví dụ MySQL84);');
       console.log('  nếu MySQL dùng cổng khác 3306, tạo file server/.env có dòng DB_PORT=<cổng> rồi chạy lại.');

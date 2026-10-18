@@ -23,6 +23,6 @@ pool.query('SELECT 1 FROM products LIMIT 1').catch((err) => {
     ER_BAD_DB_ERROR: 'Chưa có CSDL khangshop. Chạy: npm run setup',
     ER_NO_SUCH_TABLE: 'CSDL chưa có bảng. Chạy: npm run db:reset',
   }[err.code];
-  console.error(`Không kết nối được cơ sở dữ liệu: ${err.message}`);
+  console.error(`Không kết nối được cơ sở dữ liệu: ${err.message || err.code}`);
   if (hint) console.error(hint);
 });

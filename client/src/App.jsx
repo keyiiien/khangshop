@@ -20,13 +20,13 @@ import Coupons from './pages/admin/Coupons.jsx';
 import AdminReviews from './pages/admin/Reviews.jsx';
 
 const TITLES = {
-  '/': 'KhangShop – Mua sắm trực tuyến',
-  '/san-pham': 'Sản phẩm – KhangShop',
-  '/gio-hang': 'Giỏ hàng – KhangShop',
-  '/thanh-toan': 'Thanh toán – KhangShop',
-  '/dang-nhap': 'Đăng nhập – KhangShop',
-  '/tra-cuu-don-hang': 'Tra cứu đơn hàng – KhangShop',
-  '/tai-khoan/don-hang': 'Đơn hàng của tôi – KhangShop',
+  '/': 'DailyCart – Mua sắm trực tuyến',
+  '/san-pham': 'Sản phẩm – DailyCart',
+  '/gio-hang': 'Giỏ hàng – DailyCart',
+  '/thanh-toan': 'Thanh toán – DailyCart',
+  '/dang-nhap': 'Đăng nhập – DailyCart',
+  '/tra-cuu-don-hang': 'Tra cứu đơn hàng – DailyCart',
+  '/tai-khoan/don-hang': 'Đơn hàng của tôi – DailyCart',
 };
 
 // Cuộn lên đầu và đặt tiêu đề tab khi chuyển trang
@@ -35,8 +35,8 @@ function RouteEffects() {
   useEffect(() => {
     window.scrollTo(0, 0);
     if (TITLES[pathname]) document.title = TITLES[pathname];
-    else if (pathname.startsWith('/quan-tri')) document.title = 'Quản trị – KhangShop';
-    else if (pathname.startsWith('/don-hang')) document.title = 'Đơn hàng – KhangShop';
+    else if (pathname.startsWith('/quan-tri')) document.title = 'Quản trị – DailyCart';
+    else if (pathname.startsWith('/don-hang')) document.title = 'Đơn hàng – DailyCart';
   }, [pathname]);
   return null;
 }

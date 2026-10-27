@@ -1,8 +1,8 @@
 {
-  "name": "khangshop",
+  "name": "dailycart",
   "version": "1.0.0",
   "private": true,
-  "description": "Website thương mại điện tử và đặt hàng trực tuyến KhangShop",
+  "description": "Website thương mại điện tử và đặt hàng trực tuyến DailyCart",
   "engines": {
     "node": ">=20.19"
   },

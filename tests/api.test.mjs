@@ -121,7 +121,7 @@ const forbidden = await call('/admin/stats', { token: userToken });
 check('customer cannot access admin 403', forbidden.status === 403);
 const noAuth = await call('/admin/stats');
 check('admin without token 401', noAuth.status === 401);
-const adminLogin = await call('/auth/login', { method: 'POST', body: { login: 'admin@khangshop.local', password: 'Admin@123' } });
+const adminLogin = await call('/auth/login', { method: 'POST', body: { login: 'admin@dailycart.local', password: 'Admin@123' } });
 const adminToken = adminLogin.data.token;
 check('admin login', adminLogin.data.user.role === 'admin');
 

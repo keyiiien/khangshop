@@ -62,7 +62,7 @@ export default function Login() {
         <section className="auth-aside">
           <div>
             <span className="sticker" style={{ fontSize: 13, letterSpacing: '0.06em', transform: 'rotate(-3deg)' }}>ĐĂNG KÝ MIỄN PHÍ</span>
-            <h1>Mua sắm nhanh hơn với tài khoản KhangShop</h1>
+            <h1>Mua sắm nhanh hơn với tài khoản DailyCart</h1>
           </div>
           <ul className="check-list">
             {BENEFITS.map((b) => (
@@ -135,7 +135,7 @@ export default function Login() {
               </div>
               <label className="check">
                 <input type="checkbox" checked={regForm.agree} onChange={setR('agree')} />
-                <span>Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật của KhangShop.</span>
+                <span>Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật của DailyCart.</span>
               </label>
               <button type="submit" className="btn btn-accent btn-lg btn-block" disabled={busy}>
                 {busy ? 'Đang tạo tài khoản…' : 'Tạo tài khoản'}

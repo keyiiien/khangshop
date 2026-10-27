@@ -3,12 +3,12 @@ import { createApp } from './app.js';
 import { pool } from './db.js';
 
 const server = createApp().listen(config.port, () => {
-  console.log(`KhangShop đang chạy tại http://localhost:${config.port}`);
+  console.log(`DailyCart đang chạy tại http://localhost:${config.port}`);
 });
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.error(`Cổng ${config.port} đang bị chương trình khác dùng (có thể KhangShop đã chạy ở cửa sổ khác).`);
+    console.error(`Cổng ${config.port} đang bị chương trình khác dùng (có thể DailyCart đã chạy ở cửa sổ khác).`);
     console.error('Tắt chương trình đó, hoặc đổi PORT trong server/.env rồi chạy lại.');
     process.exit(1);
   }

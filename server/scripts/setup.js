@@ -38,7 +38,7 @@ const host = existing.DB_HOST || 'localhost';
 const port = Number(existing.DB_PORT || 3306);
 const database = existing.DB_NAME || 'khangshop';
 
-console.log('== Cài đặt cơ sở dữ liệu KhangShop ==');
+console.log('== Cài đặt cơ sở dữ liệu DailyCart ==');
 console.log(`MySQL: ${host}:${port}, CSDL: ${database}\n`);
 const adminUser = (await ask('Tài khoản quản trị MySQL (Enter = root): ')).trim() || 'root';
 

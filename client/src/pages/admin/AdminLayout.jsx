@@ -50,9 +50,9 @@ export default function AdminLayout() {
     <div className="admin-shell">
       <aside className="admin-side" aria-label="Menu quản trị">
         <Link to="/quan-tri" className="admin-brand">
-          <span className="logo-mark" aria-hidden="true">K</span>
+          <span className="logo-mark" aria-hidden="true">D</span>
           <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-            <strong style={{ fontSize: 19, color: '#fff' }}>KhangShop</strong>
+            <strong style={{ fontSize: 19, color: '#fff' }}>DailyCart</strong>
             <span style={{ fontSize: 12, color: '#bdbdbd' }}>Trang quản trị</span>
           </span>
         </Link>

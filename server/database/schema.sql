@@ -1,4 +1,4 @@
--- Cơ sở dữ liệu KhangShop (MySQL 8.x, utf8mb4)
+-- Cơ sở dữ liệu DailyCart (MySQL 8.x, utf8mb4)
 
 CREATE TABLE users (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

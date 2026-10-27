@@ -1,4 +1,4 @@
--- Các câu truy vấn xem dữ liệu KhangShop (chỉ đọc, không thay đổi dữ liệu)
+-- Các câu truy vấn xem dữ liệu DailyCart (chỉ đọc, không thay đổi dữ liệu)
 -- Trong MySQL Workbench (bản mới): chuột phải một bảng > Select Rows để mở tab DB Notebook,
 -- sau đó dán MỘT câu dưới đây vào dòng "sql>" cuối cùng và bấm Ctrl + Enter.
 USE khangshop;

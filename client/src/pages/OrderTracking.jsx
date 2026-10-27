@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api.js';
 import { PAYMENT, SHIPPING, SHOP, STATUS, STATUS_FLOW, formatDateTime, formatVnd } from '../format.js';
 
-const LOOKUP_KEY = 'khangshop.orders';
+const LOOKUP_KEY = 'dailycart.orders';
 
 // Ghi nhớ số điện thoại của đơn vừa đặt trong phiên, để khách xem lại mà không phải nhập lại
 export function rememberOrder(code, phone) {
@@ -162,7 +162,7 @@ export default function OrderTracking() {
           <span className="success-icon"><Icon name="check" size={48} strokeWidth={2.6} /></span>
           <div style={{ flex: '1 1 420px', minWidth: 0 }}>
             <h1>Đặt hàng thành công!</h1>
-            <p style={{ margin: '0 0 18px', fontSize: 17 }}>Cảm ơn bạn đã mua sắm tại KhangShop. Cửa hàng sẽ liên hệ để xác nhận đơn hàng.</p>
+            <p style={{ margin: '0 0 18px', fontSize: 17 }}>Cảm ơn bạn đã mua sắm tại DailyCart. Cửa hàng sẽ liên hệ để xác nhận đơn hàng.</p>
             <span className="chip" style={{ height: 46, padding: '0 16px', fontSize: 15, borderRadius: 12 }}>
               Mã đơn hàng: <strong style={{ marginLeft: 6, fontSize: 17 }}>{order.code}</strong>
             </span>

@@ -149,7 +149,7 @@ await shot(page, '07-register', false);
 const admin = await newPage();
 admin.on('dialog', (d) => d.accept());
 await go(admin, '/dang-nhap');
-await admin.type('#dn-tk', 'admin@khangshop.local');
+await admin.type('#dn-tk', 'admin@dailycart.local');
 await admin.type('#dn-mk', 'Admin@123');
 await admin.click('.auth-form form button[type="submit"]');
 try {
@@ -213,7 +213,7 @@ check('mobile detail: no horizontal scroll', await mobile.evaluate(() => documen
 await go(mobile, `/don-hang/${orderCode}`);
 const adminMobile = await newPage(390, 844, true);
 await adminMobile.goto(BASE + '/', { waitUntil: 'networkidle0' });
-await adminMobile.evaluate((t) => localStorage.setItem('khangshop.token', t), await admin.evaluate(() => localStorage.getItem('khangshop.token')));
+await adminMobile.evaluate((t) => localStorage.setItem('dailycart.token', t), await admin.evaluate(() => localStorage.getItem('dailycart.token')));
 await go(adminMobile, '/quan-tri');
 check('mobile admin: no horizontal scroll', await adminMobile.evaluate(() => document.documentElement.scrollWidth <= innerWidth), await adminMobile.evaluate(() => document.documentElement.scrollWidth));
 await shot(adminMobile, '13-mobile-admin');

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-const CART_KEY = 'khangshop.cart';
+const CART_KEY = 'dailycart.cart';
 const MAX_QTY = 99;
 const CartContext = createContext(null);
 

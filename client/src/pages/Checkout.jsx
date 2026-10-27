@@ -292,7 +292,7 @@ export default function Checkout() {
           <div className="summary-row"><span style={{ fontSize: 17, fontWeight: 700 }}>Tổng cộng</span><span className="summary-total">{formatVnd(subtotal - discount + fee)}</span></div>
           <label className="check">
             <input type="checkbox" id="tt-agree" checked={form.agree} onChange={set('agree')} aria-invalid={errors.agree ? 'true' : undefined} aria-describedby={errors.agree ? 'tt-agree-error' : undefined} />
-            <span>Tôi đã kiểm tra thông tin và đồng ý với điều khoản mua hàng của KhangShop.</span>
+            <span>Tôi đã kiểm tra thông tin và đồng ý với điều khoản mua hàng của DailyCart.</span>
           </label>
           {errors.agree && <span className="field-error" id="tt-agree-error">{errors.agree}</span>}
           {submitError && <p className="alert alert-error" role="alert" style={{ margin: 0 }}>{submitError}</p>}

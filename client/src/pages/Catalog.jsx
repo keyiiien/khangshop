@@ -80,7 +80,7 @@ export default function Catalog() {
       <section className="banner" style={{ background: banner }}>
         <div>
           <h1>{title}</h1>
-          <p style={{ margin: 0 }}>{category?.description ?? 'Khám phá sản phẩm từ tất cả danh mục của KhangShop.'}</p>
+          <p style={{ margin: 0 }}>{category?.description ?? 'Khám phá sản phẩm từ tất cả danh mục của DailyCart.'}</p>
         </div>
       </section>
 

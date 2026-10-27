@@ -22,7 +22,7 @@ export default function ProductDetail() {
   }, [slug]);
 
   useEffect(() => {
-    if (data) document.title = `${data.product.name} – KhangShop`;
+    if (data) document.title = `${data.product.name} – DailyCart`;
   }, [data]);
 
   if (loading && data?.product.slug !== slug) return <div className="container page"><Loading /></div>;

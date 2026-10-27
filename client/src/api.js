@@ -1,4 +1,4 @@
-const TOKEN_KEY = 'khangshop.token';
+const TOKEN_KEY = 'dailycart.token';
 
 export function getToken() {
   try {

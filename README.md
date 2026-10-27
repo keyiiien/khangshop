@@ -1,6 +1,8 @@
-# KhangShop – Website thương mại điện tử và đặt hàng trực tuyến
+# DailyCart – Website thương mại điện tử và đặt hàng trực tuyến
 
 Đồ án thực tập tốt nghiệp – Nguyễn Công Khang (A44166), Trường Đại học Thăng Long.
+
+Tên cửa hàng hiển thị trên web là **DailyCart**. Tên kho mã nguồn, tên CSDL và tài khoản MySQL vẫn giữ là `khangshop`.
 
 | Thành phần | Công nghệ |
 |---|---|
@@ -127,8 +129,8 @@ cd tests && npm install && npm run api && npm run ui   # cửa sổ 2
 
 | Vai trò | Email | Mật khẩu |
 |---|---|---|
-| Quản trị viên | admin@khangshop.local | Admin@123 |
-| Khách hàng | khach@khangshop.local | Khach@123 |
+| Quản trị viên | admin@dailycart.local | Admin@123 |
+| Khách hàng | khach@dailycart.local | Khach@123 |
 
 Đổi mật khẩu này nếu đưa website lên mạng.
 

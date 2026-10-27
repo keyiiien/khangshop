@@ -8,8 +8,8 @@ import { SHOP } from '../format.js';
 
 function Logo() {
   return (
-    <Link to="/" className="logo" aria-label="KhangShop - Trang chủ">
-      <span className="logo-mark" aria-hidden="true">K</span>
+    <Link to="/" className="logo" aria-label="DailyCart – Trang chủ">
+      <span className="logo-mark" aria-hidden="true">D</span>
       <span className="logo-text">{SHOP.name}</span>
     </Link>
   );
@@ -78,7 +78,7 @@ function Footer() {
         <div className="stack" style={{ gap: 8 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span className="logo-mark" style={{ width: 38, height: 38, fontSize: 19, boxShadow: 'none' }} aria-hidden="true">
-              K
+              D
             </span>
             <strong style={{ fontSize: 22, color: '#fff' }}>{SHOP.name}</strong>
           </span>

@@ -1,4 +1,4 @@
-// Tạo cơ sở dữ liệu, bảng và dữ liệu mẫu cho KhangShop.
+// Tạo cơ sở dữ liệu, bảng và dữ liệu mẫu cho DailyCart.
 //   npm run db:init   -> tạo mới nếu CSDL chưa có dữ liệu
 //   npm run db:reset  -> XÓA toàn bộ CSDL rồi tạo lại từ đầu
 import crypto from 'node:crypto';
@@ -18,8 +18,8 @@ const { database, ...server } = config.db;
 
 // Tài khoản dùng để chạy thử, ghi lại trong README
 const ACCOUNTS = [
-  { fullName: 'Quản trị viên', email: 'admin@khangshop.local', phone: '0900000001', password: 'Admin@123', role: 'admin' },
-  { fullName: 'Nguyễn Văn A', email: 'khach@khangshop.local', phone: '0900000012', password: 'Khach@123', role: 'customer' },
+  { fullName: 'Quản trị viên', email: 'admin@dailycart.local', phone: '0900000001', password: 'Admin@123', role: 'admin' },
+  { fullName: 'Nguyễn Văn A', email: 'khach@dailycart.local', phone: '0900000012', password: 'Khach@123', role: 'customer' },
 ];
 
 const CATEGORIES = [
@@ -54,11 +54,11 @@ const FLOW = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'da_giao'];
 
 // Khách hàng mẫu chỉ để có lịch sử mua hàng và đánh giá; mật khẩu sinh ngẫu nhiên nên không đăng nhập được
 const SAMPLE_CUSTOMERS = [
-  ['Trần Minh Anh', 'minhanh@khangshop.local', '0900000101', 'Hà Nội', 'Phường Cầu Giấy'],
-  ['Lê Thu Hà', 'thuha@khangshop.local', '0900000102', 'Đà Nẵng', 'Phường Hải Châu'],
-  ['Phạm Quốc Bảo', 'quocbao@khangshop.local', '0900000103', 'TP. Hồ Chí Minh', 'Phường Bến Thành'],
-  ['Đỗ Ngọc Lan', 'ngoclan@khangshop.local', '0900000104', 'Hải Phòng', 'Phường Hồng Bàng'],
-  ['Vũ Đức Huy', 'duchuy@khangshop.local', '0900000105', 'Cần Thơ', 'Phường Ninh Kiều'],
+  ['Trần Minh Anh', 'minhanh@dailycart.local', '0900000101', 'Hà Nội', 'Phường Cầu Giấy'],
+  ['Lê Thu Hà', 'thuha@dailycart.local', '0900000102', 'Đà Nẵng', 'Phường Hải Châu'],
+  ['Phạm Quốc Bảo', 'quocbao@dailycart.local', '0900000103', 'TP. Hồ Chí Minh', 'Phường Bến Thành'],
+  ['Đỗ Ngọc Lan', 'ngoclan@dailycart.local', '0900000104', 'Hải Phòng', 'Phường Hồng Bàng'],
+  ['Vũ Đức Huy', 'duchuy@dailycart.local', '0900000105', 'Cần Thơ', 'Phường Ninh Kiều'],
 ];
 
 // Mã giảm giá mẫu: [mã, mô tả, loại, mức giảm, giảm tối đa, đơn tối thiểu, giới hạn lượt, số ngày đến hạn (âm = đã hết hạn)]

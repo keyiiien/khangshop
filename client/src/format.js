@@ -1,6 +1,6 @@
 // Thông tin cửa hàng: sửa các giá trị trong ngoặc vuông trước khi demo
 export const SHOP = {
-  name: 'KhangShop',
+  name: 'DailyCart',
   hotline: '[SỐ ĐIỆN THOẠI]',
   email: '[EMAIL]',
   address: '[ĐỊA CHỈ]',

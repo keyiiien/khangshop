@@ -36,7 +36,7 @@ function Header() {
                   </Link>
                 )}
                 <Link to="/tai-khoan/don-hang" className="header-link">
-                  <Icon name="user" size={22} /> {user.fullName.split(' ').pop()}
+                  <Icon name="user" size={22} /> {user.role === 'admin' ? 'Tài khoản' : user.fullName.split(' ').pop()}
                 </Link>
                 <button type="button" className="link-btn" onClick={logout} style={{ fontSize: 14 }}>
                   Đăng xuất

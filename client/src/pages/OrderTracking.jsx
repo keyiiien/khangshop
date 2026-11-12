@@ -1,82 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import Icon from '../components/Icon.jsx';
 import { ErrorBox, Loading, ProductImage, StatusChip } from '../components/ui.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api.js';
 import { PAYMENT, SHIPPING, SHOP, STATUS, STATUS_FLOW, formatDateTime, formatVnd } from '../format.js';
-
-const LOOKUP_KEY = 'dailycart.orders';
-
-// Ghi nhớ số điện thoại của đơn vừa đặt trong phiên, để khách xem lại mà không phải nhập lại
-export function rememberOrder(code, phone) {
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(LOOKUP_KEY)) ?? {};
-    sessionStorage.setItem(LOOKUP_KEY, JSON.stringify({ ...saved, [code]: phone }));
-  } catch {
-    // bỏ qua
-  }
-}
-
-function rememberedPhone(code) {
-  try {
-    return (JSON.parse(sessionStorage.getItem(LOOKUP_KEY)) ?? {})[code] ?? '';
-  } catch {
-    return '';
-  }
-}
-
-export function LookupForm({ initialCode = '' }) {
-  const navigate = useNavigate();
-  const [code, setCode] = useState(initialCode);
-  const [phone, setPhone] = useState('');
-  const [error, setError] = useState(null);
-  const [busy, setBusy] = useState(false);
-
-  async function submit(e) {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      const order = await api('/orders/lookup', { method: 'POST', body: { code, phone } });
-      rememberOrder(order.code, order.phone);
-      navigate(`/don-hang/${order.code}`, { state: { phone: order.phone } });
-    } catch (err) {
-      setError(err);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <form onSubmit={submit} className="card" style={{ background: 'var(--surface)', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '16px 20px' }}>
-      <div style={{ flex: '1 1 260px' }}>
-        <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Tra cứu đơn hàng</h2>
-        <p className="muted" style={{ margin: 0, fontSize: 14 }}>Không cần đăng nhập, chỉ cần mã đơn và số điện thoại đặt hàng.</p>
-      </div>
-      <div className="field" style={{ flex: '1 1 200px' }}>
-        <label htmlFor="tc-ma">Mã đơn hàng</label>
-        <input id="tc-ma" className="input input-upper" required value={code} onChange={(e) => setCode(e.target.value)} placeholder="Ví dụ: DH261007-0001" />
-      </div>
-      <div className="field" style={{ flex: '1 1 200px' }}>
-        <label htmlFor="tc-sdt">Số điện thoại</label>
-        <input id="tc-sdt" className="input" type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" />
-      </div>
-      <button type="submit" className="btn btn-dark" style={{ height: 50 }} disabled={busy}>
-        {busy ? 'Đang tìm…' : 'Tra cứu'}
-      </button>
-      {error && <div style={{ flexBasis: '100%' }}><ErrorBox error={error} /></div>}
-    </form>
-  );
-}
-
-export function LookupPage() {
-  return (
-    <div className="container page">
-      <LookupForm />
-    </div>
-  );
-}
 
 function Timeline({ order }) {
   const at = Object.fromEntries(order.history.map((h) => [h.status, h.at]));
@@ -106,7 +34,6 @@ export default function OrderTracking() {
   const { code } = useParams();
   const location = useLocation();
   const { user, ready } = useAuth();
-  const phone = location.state?.phone || rememberedPhone(code);
   const justPlaced = Boolean(location.state?.justPlaced);
   const [order, setOrder] = useState(null);
   const [error, setError] = useState(null);
@@ -117,26 +44,25 @@ export default function OrderTracking() {
     setLoading(true);
     setError(null);
     try {
-      if (phone) setOrder(await api('/orders/lookup', { method: 'POST', body: { code, phone } }));
-      else if (user) setOrder(await api(`/orders/mine/${code}`));
-      else setOrder(null);
+      setOrder(await api(`/orders/mine/${code}`));
     } catch (err) {
       setError(err);
       setOrder(null);
     } finally {
       setLoading(false);
     }
-  }, [code, phone, user]);
+  }, [code]);
 
+  // Đơn hàng gắn với tài khoản: phải đăng nhập mới xem được
   useEffect(() => {
-    if (ready) load();
-  }, [ready, load]);
+    if (ready && user) load();
+  }, [ready, user, load]);
 
   async function cancel() {
     if (!window.confirm(`Bạn chắc chắn muốn hủy đơn ${order.code}?`)) return;
     setCancelling(true);
     try {
-      setOrder(await api('/orders/cancel', { method: 'POST', body: { code: order.code, phone: order.phone } }));
+      setOrder(await api(`/orders/mine/${order.code}/cancel`, { method: 'POST' }));
     } catch (err) {
       setError(err);
     } finally {
@@ -144,13 +70,17 @@ export default function OrderTracking() {
     }
   }
 
-  if (loading) return <div className="container page"><Loading /></div>;
+  if (ready && !user) return <Navigate to="/dang-nhap" state={{ from: location.pathname }} replace />;
+  if (!ready || loading) return <div className="container page"><Loading /></div>;
   if (!order) {
     return (
       <div className="container page stack" style={{ gap: 20 }}>
         {error && error.status !== 404 && <ErrorBox error={error} onRetry={load} />}
-        <p className="alert alert-info" style={{ margin: 0 }}>Nhập số điện thoại đặt hàng để xem đơn <strong>{code}</strong>.</p>
-        <LookupForm initialCode={code} />
+        <div className="empty-state">
+          <h1 style={{ fontSize: 28 }}>Không tìm thấy đơn hàng {code}</h1>
+          <p className="muted" style={{ margin: 0 }}>Đơn hàng không tồn tại hoặc không thuộc tài khoản đang đăng nhập.</p>
+          <Link to="/tai-khoan/don-hang" className="btn btn-dark">Xem đơn hàng của tôi</Link>
+        </div>
       </div>
     );
   }
@@ -242,7 +172,9 @@ export default function OrderTracking() {
         </section>
       </div>
 
-      <LookupForm />
+      <Link to="/tai-khoan/don-hang" style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
+        <Icon name="arrowLeft" size={18} /> Về danh sách đơn hàng của tôi
+      </Link>
     </div>
   );
 }

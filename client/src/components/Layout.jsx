@@ -98,7 +98,6 @@ function Footer() {
         <div>
           <h3>Hỗ trợ khách hàng</h3>
           <ul>
-            <li><Link to="/tra-cuu-don-hang">Tra cứu đơn hàng</Link></li>
             <li><Link to="/tai-khoan/don-hang">Đơn hàng của tôi</Link></li>
             <li><Link to="/dang-nhap?tab=dang-ky">Đăng ký tài khoản</Link></li>
           </ul>

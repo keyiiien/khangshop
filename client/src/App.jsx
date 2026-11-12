@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
-import { Link, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import Home from './pages/Home.jsx';
 import Catalog from './pages/Catalog.jsx';
 import ProductDetail from './pages/ProductDetail.jsx';
 import Cart from './pages/Cart.jsx';
 import Checkout from './pages/Checkout.jsx';
-import OrderTracking, { LookupPage } from './pages/OrderTracking.jsx';
+import OrderTracking from './pages/OrderTracking.jsx';
 import Login from './pages/Login.jsx';
 import MyOrders from './pages/MyOrders.jsx';
 import AdminLayout from './pages/admin/AdminLayout.jsx';
@@ -25,7 +25,6 @@ const TITLES = {
   '/gio-hang': 'Giỏ hàng – DailyCart',
   '/thanh-toan': 'Thanh toán – DailyCart',
   '/dang-nhap': 'Đăng nhập – DailyCart',
-  '/tra-cuu-don-hang': 'Tra cứu đơn hàng – DailyCart',
   '/tai-khoan/don-hang': 'Đơn hàng của tôi – DailyCart',
 };
 
@@ -66,7 +65,8 @@ export default function App() {
           <Route path="gio-hang" element={<Cart />} />
           <Route path="thanh-toan" element={<Checkout />} />
           <Route path="don-hang/:code" element={<OrderTracking />} />
-          <Route path="tra-cuu-don-hang" element={<LookupPage />} />
+          {/* Trang tra cứu cũ: đơn hàng giờ xem trong tài khoản */}
+          <Route path="tra-cuu-don-hang" element={<Navigate to="/tai-khoan/don-hang" replace />} />
           <Route path="dang-nhap" element={<Login />} />
           <Route path="tai-khoan/don-hang" element={<MyOrders />} />
           <Route path="*" element={<NotFound />} />

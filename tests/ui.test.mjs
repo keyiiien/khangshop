@@ -1,6 +1,8 @@
 // Kiểm thử giao diện bằng Chrome không giao diện (puppeteer-core).
 // Cần: client đã build, server đang chạy, CSDL mẫu vừa tạo lại. Chạy: npm install && node ui.test.mjs
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
 
@@ -10,7 +12,16 @@ fs.mkdirSync(OUT, { recursive: true });
 const errors = [];
 const results = [];
 
+// Hồ sơ trình duyệt riêng, tắt trình quản lý mật khẩu: từ Chrome 157, hộp "Lưu mật khẩu?" hiện sau khi đăng nhập
+// giữ luôn bàn phím, các thao tác gõ phím sau đó không tới được trang
+const PROFILE = fs.mkdtempSync(path.join(os.tmpdir(), 'dailycart-chrome-'));
+fs.mkdirSync(path.join(PROFILE, 'Default'));
+fs.writeFileSync(path.join(PROFILE, 'Default', 'Preferences'), JSON.stringify({
+  credentials_enable_service: false,
+  profile: { password_manager_enabled: false, password_manager_leak_detection: false },
+}));
 const browser = await puppeteer.launch({
+  userDataDir: PROFILE,
   executablePath: process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe',
   headless: true,
   args: ['--no-first-run', '--lang=vi-VN'],
@@ -97,13 +108,20 @@ await page.click('.cart-line:nth-of-type(2) .qty button[aria-label="Tăng số l
 check('cart: badge 4', (await page.$eval('.site-header .badge', (el) => el.textContent)) === '4');
 await shot(page, '04-cart');
 
-await clickText(page, 'a', 'Tiến hành thanh toán');
+// Chưa đăng nhập: giỏ hàng mời đăng nhập, đăng nhập xong quay lại trang thanh toán, giỏ hàng giữ nguyên
+await clickText(page, 'a', 'Đăng nhập để đặt hàng');
+await page.waitForSelector('#dn-tk');
+check('checkout requires login: login page with notice', (await page.content()).includes('Vui lòng đăng nhập hoặc đăng ký để đặt hàng'));
+await page.type('#dn-tk', 'khach@dailycart.local');
+await page.type('#dn-mk', 'Khach@123');
+await page.click('.auth-form form button[type="submit"]');
 await page.waitForSelector('#tt-fullName');
-// Gửi khi chưa điền: phải báo lỗi
+check('after login: back to checkout, cart kept, contact prefilled', page.url().endsWith('/thanh-toan')
+  && (await page.$eval('.site-header .badge', (el) => el.textContent)) === '4'
+  && (await page.$eval('#tt-phone', (el) => el.value)) === '0900000012');
+// Gửi khi chưa điền địa chỉ: phải báo lỗi
 await clickText(page, 'button[type="submit"]', 'Đặt hàng');
-check('checkout: validation errors shown', (await page.$$('.field-error')).length >= 5);
-await page.type('#tt-fullName', 'Trần Văn Thử');
-await page.type('#tt-phone', '0933333333');
+check('checkout: validation errors shown', (await page.$$('.field-error')).length >= 4);
 await page.select('#tt-province', 'Hà Nội');
 await page.type('#tt-ward', 'Phường Hoàng Liệt');
 await page.type('#tt-address', '10 Đường Thử Nghiệm');
@@ -142,6 +160,10 @@ await clickText(page, 'button', 'Hủy đơn hàng');
 await page.waitForFunction(() => document.body.textContent.includes('Đã hủy'));
 check('customer cancelled order', true);
 
+await go(page, '/tai-khoan/don-hang');
+check('my orders lists the new order', (await page.content()).includes(orderCode));
+
+await page.evaluate(() => localStorage.removeItem('dailycart.token'));   // đăng xuất để xem trang đăng ký
 await go(page, '/dang-nhap?tab=dang-ky');
 await shot(page, '07-register', false);
 

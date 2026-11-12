@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { api } from '../api.js';
 import { PAYMENT, PROVINCES, SHIPPING, formatVnd } from '../format.js';
-import { rememberOrder } from './OrderTracking.jsx';
 
 function validate(form) {
   const errors = {};
@@ -35,7 +34,7 @@ function Field({ id, label, error, required, hint, children }) {
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, ready } = useAuth();
   const { items, subtotal, clear } = useCart();
   const [form, setForm] = useState({
     fullName: user?.fullName ?? '',
@@ -69,6 +68,8 @@ export default function Checkout() {
   }, [user]);
 
   if (items.length === 0 && !submitting) return <Navigate to="/gio-hang" replace />;
+  // Đặt hàng bắt buộc đăng nhập; giỏ hàng vẫn giữ nguyên, đăng nhập xong quay lại trang này
+  if (ready && !user) return <Navigate to="/dang-nhap" state={{ from: '/thanh-toan' }} replace />;
 
   const fee = SHIPPING[form.shippingMethod].fee;
   const discount = coupon?.discount ?? 0;
@@ -124,10 +125,8 @@ export default function Checkout() {
           couponCode: coupon?.code,
         },
       });
-      const phone = customer.phone.replace(/[\s.-]/g, '');
-      rememberOrder(result.code, phone);
       clear();
-      navigate(`/don-hang/${result.code}`, { state: { phone, justPlaced: true } });
+      navigate(`/don-hang/${result.code}`, { state: { justPlaced: true } });
     } catch (err) {
       setSubmitError(err.message);
       setSubmitting(false);
@@ -144,11 +143,7 @@ export default function Checkout() {
           <section className="card">
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px 16px', marginBottom: 20 }}>
               <h2 style={{ fontSize: 22, fontWeight: 800 }}>1. Thông tin nhận hàng</h2>
-              {!user && (
-                <span style={{ fontSize: 14 }}>
-                  Đã có tài khoản? <Link to="/dang-nhap" state={{ from: '/thanh-toan' }} style={{ fontWeight: 700 }}>Đăng nhập</Link> để điền nhanh
-                </span>
-              )}
+              {user && <span className="muted" style={{ fontSize: 14 }}>Đặt hàng bằng tài khoản {user.email}</span>}
             </div>
             <div className="form-grid">
               <Field id="tt-fullName" label="Họ và tên" required error={errors.fullName}>

@@ -96,25 +96,29 @@ const stockAfter = (await call(`/products/${tn.slug}`)).data.product.stock;
 check('stock decreased by 2', stockAfter === stockBefore - 2, `${stockBefore} -> ${stockAfter}`);
 
 const kc = (await call('/products?q=KC-007')).data.items[0];
+const guestOrder = await call('/orders', {
+  method: 'POST',
+  body: { customer: { fullName: 'A', phone: '0911111111', province: 'Hà Nội', ward: 'X', address: 'Y' }, shippingMethod: 'standard', paymentMethod: 'cod', items: [{ productId: tn.id, quantity: 1 }] },
+});
+check('order without login 401', guestOrder.status === 401, JSON.stringify(guestOrder.data));
 const outOfStock = await call('/orders', {
   method: 'POST',
+  token: userToken,
   body: { customer: { fullName: 'A', phone: '0911111111', province: 'Hà Nội', ward: 'X', address: 'Y' }, shippingMethod: 'standard', paymentMethod: 'cod', items: [{ productId: kc.id, quantity: 1 }] },
 });
 check('order out-of-stock 409', outOfStock.status === 409, JSON.stringify(outOfStock.data));
 const badPhone = await call('/orders', {
   method: 'POST',
+  token: userToken,
   body: { customer: { fullName: 'A', phone: '123', province: 'Hà Nội', ward: 'X', address: 'Y' }, shippingMethod: 'standard', paymentMethod: 'cod', items: [{ productId: tn.id, quantity: 1 }] },
 });
 check('order invalid phone 400', badPhone.status === 400);
 
-const lookup = await call('/orders/lookup', { method: 'POST', body: { code: order.data.code.toLowerCase(), phone: '0911 111 111' } });
-check('lookup by code + phone', lookup.status === 200 && lookup.data.items[0].quantity === 2 && lookup.data.history.length === 1, JSON.stringify(lookup.data?.items));
-const lookupBad = await call('/orders/lookup', { method: 'POST', body: { code: order.data.code, phone: '0900000000' } });
-check('lookup wrong phone 404', lookupBad.status === 404);
 const mine = await call('/orders/mine', { token: userToken });
 check('my orders', mine.data.length === 1 && mine.data[0].code === order.data.code);
-const mineDetail = await call(`/orders/mine/${order.data.code}`, { token: userToken });
-check('my order detail', mineDetail.status === 200);
+const mineDetail = await call(`/orders/mine/${order.data.code.toLowerCase()}`, { token: userToken });
+check('my order detail', mineDetail.status === 200 && mineDetail.data.items[0].quantity === 2 && mineDetail.data.history.length === 1, JSON.stringify(mineDetail.data?.items));
+check('my order detail needs login 401', (await call(`/orders/mine/${order.data.code}`)).status === 401);
 
 // Quản trị
 const forbidden = await call('/admin/stats', { token: userToken });
@@ -135,20 +139,24 @@ const skip = await call(`/admin/orders/${order.data.code}/status`, { method: 'PA
 check('cannot skip status 409', skip.status === 409, JSON.stringify(skip.data));
 const s1 = await call(`/admin/orders/${order.data.code}/status`, { method: 'PATCH', token: adminToken, body: { status: 'da_xac_nhan' } });
 check('advance to da_xac_nhan', s1.data.status === 'da_xac_nhan');
-const custCancel = await call('/orders/cancel', { method: 'POST', body: { code: order.data.code, phone: '0911111111' } });
+const custCancel = await call(`/orders/mine/${order.data.code}/cancel`, { method: 'POST', token: userToken });
 check('customer cannot cancel confirmed order 409', custCancel.status === 409);
+const otherView = await call(`/orders/mine/${order.data.code}`, { token: adminToken });
+const otherCancel = await call(`/orders/mine/${order.data.code}/cancel`, { method: 'POST', token: adminToken });
+check("another account cannot view or cancel someone else's order 404", otherView.status === 404 && otherCancel.status === 404);
 const adminCancel = await call(`/admin/orders/${order.data.code}/status`, { method: 'PATCH', token: adminToken, body: { status: 'da_huy' } });
 check('admin cancels confirmed order', adminCancel.data.status === 'da_huy' && adminCancel.data.history.length === 3);
 const stockRestored = (await call(`/products/${tn.slug}`)).data.product.stock;
 check('stock restored after cancel', stockRestored === stockBefore, `${stockBefore} vs ${stockRestored}`);
 
-// Khách tự hủy đơn chờ xác nhận
+// Khách tự hủy đơn chờ xác nhận của mình
 const order2 = await call('/orders', {
   method: 'POST',
+  token: userToken,
   body: { customer: { fullName: 'Khách lẻ', phone: '0922222222', province: 'Huế', ward: 'Phường Thuận Hóa', address: '2 Đường Thử' }, shippingMethod: 'standard', paymentMethod: 'cod', items: [{ productId: tn.id, quantity: 1 }] },
 });
-const c2 = await call('/orders/cancel', { method: 'POST', body: { code: order2.data.code, phone: '0922222222' } });
-check('guest cancels pending order', c2.data?.status === 'da_huy', JSON.stringify(c2.data));
+const c2 = await call(`/orders/mine/${order2.data.code}/cancel`, { method: 'POST', token: userToken });
+check('customer cancels own pending order', c2.data?.status === 'da_huy', JSON.stringify(c2.data));
 
 // Sản phẩm: thêm (kèm ảnh), sửa, ẩn, xóa
 const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d6a4c50000000049454e44ae426082', 'hex');
@@ -213,7 +221,7 @@ check('order with fixed coupon', orderC.status === 201 && orderC.data.discount =
 const orderCDetail = await call(`/orders/mine/${orderC.data.code}`, { token: userToken });
 check('order keeps coupon code and discount', orderCDetail.data.couponCode === 'GIAM30K' && orderCDetail.data.discount === 30000 && orderCDetail.data.subtotal === tn.price);
 check('coupon usage counted', (await coupon('GIAM30K')).usedCount === usedBefore + 1);
-await call('/orders/cancel', { method: 'POST', body: { code: orderC.data.code, phone: buyer.phone } });
+await call(`/orders/mine/${orderC.data.code}/cancel`, { method: 'POST', token: userToken });
 check('coupon usage returned after cancel', (await coupon('GIAM30K')).usedCount === usedBefore);
 
 const once = await placeOrder([{ productId: cheap.id, quantity: 1 }], { couponCode: 'CHAOBAN' });
@@ -222,7 +230,7 @@ const twice = await placeOrder([{ productId: cheap.id, quantity: 1 }], { couponC
 check('single-use coupon: second order 409', twice.status === 409, JSON.stringify(twice.data));
 const badCouponOrder = await placeOrder([{ productId: cheap.id, quantity: 1 }], { couponCode: 'KHONGCO' });
 check('order with unknown coupon 404, no order created', badCouponOrder.status === 404);
-await call('/orders/cancel', { method: 'POST', body: { code: once.data.code, phone: buyer.phone } });
+await call(`/orders/mine/${once.data.code}/cancel`, { method: 'POST', token: userToken });
 
 const newCoupon = await call('/admin/coupons', { method: 'POST', token: adminToken, body: { code: 'thu50', type: 'percent', value: 50, maxDiscount: 20000, minOrder: 0 } });
 check('admin creates coupon', newCoupon.status === 201 && newCoupon.data.code === 'THU50' && newCoupon.data.state === 'dang_chay', JSON.stringify(newCoupon.data));

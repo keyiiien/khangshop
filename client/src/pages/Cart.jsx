@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../components/Icon.jsx';
 import { CheckoutSteps, ProductImage, QtyStepper } from '../components/ui.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { api } from '../api.js';
 import { formatVnd } from '../format.js';
 
 export default function Cart() {
   const { items, count, subtotal, update, remove, sync } = useCart();
+  const { user } = useAuth();
   const [notice, setNotice] = useState('');
 
   // Đối chiếu giỏ hàng với giá và tồn kho hiện tại trên server
@@ -69,11 +71,19 @@ export default function Cart() {
             <div className="summary-row"><span>Phí vận chuyển</span><span className="muted" style={{ textAlign: 'right' }}>Tính khi thanh toán</span></div>
             <hr className="divider" />
             <div className="summary-row"><span style={{ fontWeight: 700, fontSize: 17 }}>Tạm tính</span><span className="summary-total">{formatVnd(subtotal)}</span></div>
-            <Link to="/thanh-toan" className="btn btn-accent btn-lg btn-block">
-              Tiến hành thanh toán <Icon name="arrowRight" strokeWidth={2.4} />
-            </Link>
+            {user ? (
+              <Link to="/thanh-toan" className="btn btn-accent btn-lg btn-block">
+                Tiến hành thanh toán <Icon name="arrowRight" strokeWidth={2.4} />
+              </Link>
+            ) : (
+              <Link to="/dang-nhap" state={{ from: '/thanh-toan' }} className="btn btn-accent btn-lg btn-block">
+                Đăng nhập để đặt hàng <Icon name="arrowRight" strokeWidth={2.4} />
+              </Link>
+            )}
             <p className="muted" style={{ margin: 0, fontSize: 13, textAlign: 'center' }}>
-              Bạn có thể chọn thanh toán khi nhận hàng (COD) ở bước tiếp theo.
+              {user
+                ? 'Bạn có thể chọn thanh toán khi nhận hàng (COD) ở bước tiếp theo.'
+                : 'Cần đăng nhập hoặc đăng ký tài khoản để đặt hàng. Giỏ hàng của bạn vẫn được giữ nguyên.'}
             </p>
           </aside>
         </div>

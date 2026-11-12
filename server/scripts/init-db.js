@@ -38,16 +38,18 @@ const DATA_DIR = path.join(here, '..', 'database');
 const SEED_IMAGE_DIR = path.join(DATA_DIR, 'anh-san-pham');
 const PRODUCTS = JSON.parse(await fs.readFile(path.join(DATA_DIR, 'san_pham_mau.json'), 'utf8'));
 
-// Đơn hàng mẫu: [số phút trước, tên, sđt, tỉnh, phường, phương thức thanh toán, trạng thái, [[mã SP, SL]], của khách mẫu]
+// Đơn hàng đang xử lý mẫu: [số phút trước, người đặt, phương thức thanh toán, trạng thái, [[mã SP, SL]]].
+// Đặt hàng bắt buộc đăng nhập nên mọi đơn đều thuộc một tài khoản: 'khach' là tài khoản dùng thử,
+// số 0-4 là khách hàng mẫu trong SAMPLE_CUSTOMERS.
 const ORDERS = [
-  [3 * 24 * 60 - 60, 'Bùi Thị H', '0900000123', 'TP. Hồ Chí Minh', 'Phường Bến Thành', 'cod', 'da_giao', [['KC-007', 1]]],
-  [3 * 24 * 60 - 600, 'Đặng Văn G', '0900000890', 'Hà Nội', 'Phường Hoàng Liệt', 'bank', 'da_giao', [['BP-002', 1], ['CA-014', 1]]],
-  [2 * 24 * 60 - 120, 'Vũ Thị F', '0900000567', 'Hải Phòng', 'Phường Hồng Bàng', 'cod', 'da_huy', [['DB-016', 1]]],
-  [2 * 24 * 60 - 480, 'Hoàng Văn E', '0900000234', 'Cần Thơ', 'Phường Ninh Kiều', 'bank', 'dang_giao', [['GC-006', 1]]],
-  [24 * 60 - 60, 'Phạm Thị D', '0900000901', 'Hà Nội', 'Phường Hoàng Liệt', 'cod', 'dang_giao', [['TY-010', 1], ['ST-008', 1]]],
-  [300, 'Lê Văn C', '0900000678', 'Đà Nẵng', 'Phường Hải Châu', 'cod', 'da_xac_nhan', [['NC-003', 1]]],
-  [120, 'Trần Thị B', '0900000345', 'TP. Hồ Chí Minh', 'Phường Bến Thành', 'bank', 'cho_xac_nhan', [['BL-018', 1]]],
-  [20, 'Nguyễn Văn A', '0900000012', 'Hà Nội', 'Phường Hoàng Liệt', 'cod', 'cho_xac_nhan', [['TN-001', 1], ['BG-004', 2], ['AT-005', 1]], true],
+  [3 * 24 * 60 - 60, 2, 'cod', 'da_giao', [['KC-007', 1]]],
+  [3 * 24 * 60 - 600, 0, 'bank', 'da_giao', [['BP-002', 1], ['CA-014', 1]]],
+  [2 * 24 * 60 - 120, 3, 'cod', 'da_huy', [['DB-016', 1]]],
+  [2 * 24 * 60 - 480, 4, 'bank', 'dang_giao', [['GC-006', 1]]],
+  [24 * 60 - 60, 0, 'cod', 'dang_giao', [['TY-010', 1], ['ST-008', 1]]],
+  [300, 1, 'cod', 'da_xac_nhan', [['NC-003', 1]]],
+  [120, 2, 'bank', 'cho_xac_nhan', [['BL-018', 1]]],
+  [20, 'khach', 'cod', 'cho_xac_nhan', [['TN-001', 1], ['BG-004', 2], ['AT-005', 1]]],
 ];
 
 const FLOW = ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'da_giao'];
@@ -167,14 +169,20 @@ async function main() {
     products[p.sku] = { id: r.insertId, name: p.name, price: p.price };
   }
 
-  for (const [minutesAgo, name, phone, province, ward, payment, status, items, mine] of ORDERS) {
+  const demoCustomer = ACCOUNTS.find((a) => a.role === 'customer');
+  const buyers = {
+    ...sampleCustomers,
+    khach: { id: userIds.customer, fullName: demoCustomer.fullName, phone: demoCustomer.phone, province: 'Hà Nội', ward: 'Phường Hoàng Liệt' },
+  };
+  for (const [minutesAgo, buyerKey, payment, status, items] of ORDERS) {
+    const { id: buyerId, fullName: name, phone, province, ward } = buyers[buyerKey];
     const subtotal = items.reduce((sum, [sku, qty]) => sum + products[sku].price * qty, 0);
     const [r] = await conn.query(
       `INSERT INTO orders (code, user_id, customer_name, phone, province, ward, address_detail, shipping_method,
          shipping_fee, payment_method, subtotal, total, status, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'standard', 30000, ?, ?, ?, ?, NOW() - INTERVAL ? MINUTE)`,
       [
-        `T${minutesAgo}`, mine ? userIds.customer : null, name, phone, province, ward, 'Số nhà mẫu, đường mẫu',
+        `T${minutesAgo}`, buyerId, name, phone, province, ward, 'Số nhà mẫu, đường mẫu',
         payment, subtotal, subtotal + 30000, status, minutesAgo,
       ],
     );

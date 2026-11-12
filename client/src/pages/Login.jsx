@@ -21,6 +21,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
 
   const from = location.state?.from;
+  const fromCheckout = from === '/thanh-toan';
   if (user) return <Navigate to={from ?? (user.role === 'admin' ? '/quan-tri' : '/')} replace />;
 
   function switchTab(next) {
@@ -80,6 +81,11 @@ export default function Login() {
             <button type="button" aria-pressed={tab === 'register'} onClick={() => switchTab('register')}>Đăng ký</button>
           </div>
 
+          {fromCheckout && (
+            <p className="alert alert-info" style={{ margin: 0 }}>
+              Vui lòng đăng nhập hoặc đăng ký để đặt hàng. Giỏ hàng của bạn vẫn được giữ nguyên.
+            </p>
+          )}
           {error && <p className="alert alert-error" role="alert" style={{ margin: 0 }}>{error}</p>}
 
           {tab === 'login' ? (

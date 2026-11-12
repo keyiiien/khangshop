@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
-import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { normalizeCouponCode } from '../services/coupons.js';
 import { changeOrderStatus, createOrder, findOrderByCode, toOrderSummary } from '../services/orders.js';
 import {
@@ -39,7 +39,8 @@ export function readItems(items) {
   return [...merged].map(([productId, quantity]) => ({ productId, quantity }));
 }
 
-router.post('/', optionalAuth, async (req, res) => {
+// Đặt hàng: bắt buộc đăng nhập, đơn luôn gắn với tài khoản đặt
+router.post('/', requireAuth, async (req, res) => {
   const { shippingMethod, paymentMethod } = req.body;
   if (!SHIPPING_METHODS[shippingMethod]) throw new HttpError(400, 'Phương thức giao hàng không hợp lệ');
   if (!PAYMENT_METHODS.includes(paymentMethod)) throw new HttpError(400, 'Phương thức thanh toán không hợp lệ');
@@ -48,25 +49,10 @@ router.post('/', optionalAuth, async (req, res) => {
     items: readItems(req.body.items),
     shippingMethod,
     paymentMethod,
-    userId: req.user?.id,
+    userId: req.user.id,
     couponCode: normalizeCouponCode(req.body.couponCode) || null,
   });
   res.status(201).json(result);
-});
-
-// Tra cứu đơn cho khách (không cần đăng nhập): cần đúng mã đơn và số điện thoại
-router.post('/lookup', async (req, res) => {
-  const code = text(req.body.code, 20).toUpperCase();
-  const phone = normalizePhone(req.body.phone);
-  const order = code ? await findOrderByCode(code) : null;
-  if (!order || order.phone !== phone) throw new HttpError(404, 'Không tìm thấy đơn hàng với mã và số điện thoại này');
-  res.json(order);
-});
-
-router.post('/cancel', async (req, res) => {
-  const code = text(req.body.code, 20).toUpperCase();
-  await changeOrderStatus(code, 'da_huy', { customerPhone: normalizePhone(req.body.phone) });
-  res.json(await findOrderByCode(code));
 });
 
 router.get('/mine', requireAuth, async (req, res) => {
@@ -78,10 +64,18 @@ router.get('/mine', requireAuth, async (req, res) => {
   res.json(rows.map(toOrderSummary));
 });
 
+// Xem chi tiết một đơn: chỉ xem được đơn của chính tài khoản đang đăng nhập
 router.get('/mine/:code', requireAuth, async (req, res) => {
   const order = await findOrderByCode(text(req.params.code, 20).toUpperCase());
   if (!order || order.userId !== req.user.id) throw new HttpError(404, 'Không tìm thấy đơn hàng');
   res.json(order);
+});
+
+// Khách tự hủy đơn của mình khi đơn còn "Chờ xác nhận"
+router.post('/mine/:code/cancel', requireAuth, async (req, res) => {
+  const code = text(req.params.code, 20).toUpperCase();
+  await changeOrderStatus(code, 'da_huy', { actorId: req.user.id, customerId: req.user.id });
+  res.json(await findOrderByCode(code));
 });
 
 export default router;

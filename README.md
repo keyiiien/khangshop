@@ -19,9 +19,9 @@ Tên cửa hàng hiển thị trên web là **DailyCart**. Tên kho mã nguồn,
 - Chi tiết sản phẩm, sản phẩm tương tự
 - Đánh giá sản phẩm: điểm trung bình, số đánh giá theo từng mức sao; khách đã nhận hàng được chấm 1–5 sao kèm nhận xét, sửa hoặc xóa đánh giá của mình
 - Giỏ hàng (lưu trên trình duyệt, tự đối chiếu giá và tồn kho với máy chủ)
-- Đặt hàng không cần đăng nhập; chọn giao tiêu chuẩn/giao nhanh, thanh toán COD/chuyển khoản
+- Đặt hàng (bắt buộc đăng nhập; giỏ hàng vẫn dùng được khi chưa đăng nhập và được giữ nguyên sau khi đăng nhập); chọn giao tiêu chuẩn/giao nhanh, thanh toán COD/chuyển khoản
 - Mã giảm giá ở trang thanh toán (giảm theo % có mức tối đa hoặc giảm số tiền cố định)
-- Theo dõi đơn theo mã đơn + số điện thoại; tự hủy đơn khi đơn còn "Chờ xác nhận"
+- Theo dõi đơn trong mục "Đơn hàng của tôi"; tự hủy đơn khi đơn còn "Chờ xác nhận"
 - Đăng ký, đăng nhập, xem "Đơn hàng của tôi"
 
 **Quản trị viên** (`/quan-tri`)
@@ -38,6 +38,7 @@ Tên cửa hàng hiển thị trên web là **DailyCart**. Tên kho mã nguồn,
 - Giá và tổng tiền luôn tính lại ở máy chủ, không tin giá gửi từ trình duyệt
 - Đặt hàng chạy trong transaction, khóa dòng sản phẩm (`SELECT … FOR UPDATE`) để không bán quá tồn kho
 - Luồng trạng thái: Chờ xác nhận → Đã xác nhận → Đang giao → Đã giao; chỉ được đi tới bước kế tiếp
+- Đặt hàng bắt buộc đăng nhập; mỗi đơn gắn với tài khoản đặt, khách chỉ xem và hủy được đơn của chính mình
 - Hủy đơn: khách hủy được khi "Chờ xác nhận", quản trị viên hủy được trước khi giao; hủy thì hoàn lại kho
 - Mỗi lần đổi trạng thái được ghi vào bảng `order_status_history`
 - Mã giảm giá chỉ giảm trên tiền hàng; khi đặt hàng máy chủ khóa dòng mã, kiểm tra lại điều kiện và tăng số lượt dùng trong cùng transaction; hủy đơn thì trả lại lượt dùng
@@ -115,7 +116,7 @@ Những lần sau chỉ cần `npm start` (đã cài và build rồi). Nếu t�
 
 ## Kiểm thử tự động
 
-Thư mục `tests/` gồm 89 kịch bản kiểm thử API và 31 kịch bản kiểm thử giao diện (Chrome không giao diện).
+Thư mục `tests/` gồm 90 kịch bản kiểm thử API và 34 kịch bản kiểm thử giao diện (Chrome không giao diện).
 Các kịch bản thay đổi dữ liệu, nên chạy trên CSDL mẫu vừa tạo lại:
 
 ```bash
@@ -180,10 +181,10 @@ khangshop/
 | POST | `/api/products/:slug/reviews` | Gửi hoặc sửa đánh giá của mình (cần đăng nhập, đã nhận hàng) |
 | DELETE | `/api/products/:slug/reviews/mine` | Xóa đánh giá của mình |
 | POST | `/api/coupons/check` | Kiểm tra mã giảm giá với giỏ hàng hiện tại |
-| POST | `/api/orders` | Đặt hàng (có thể kèm `couponCode`) |
-| POST | `/api/orders/lookup` | Tra cứu đơn (mã đơn + số điện thoại) |
-| POST | `/api/orders/cancel` | Khách hủy đơn |
+| POST | `/api/orders` | Đặt hàng, cần đăng nhập (có thể kèm `couponCode`) |
 | GET | `/api/orders/mine` | Đơn của tài khoản đang đăng nhập |
+| GET | `/api/orders/mine/:code` | Chi tiết một đơn của tài khoản đang đăng nhập |
+| POST | `/api/orders/mine/:code/cancel` | Khách hủy đơn của mình khi còn "Chờ xác nhận" |
 | GET | `/api/admin/stats` | Số liệu tổng quan |
 | GET/PATCH | `/api/admin/orders…` | Danh sách, chi tiết, đổi trạng thái đơn |
 | GET/POST/PUT/PATCH/DELETE | `/api/admin/products…` | Quản lý sản phẩm |

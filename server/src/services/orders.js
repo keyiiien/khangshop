@@ -135,13 +135,14 @@ export async function createOrder({ customer, shippingMethod, paymentMethod, ite
 
 // Đổi trạng thái đơn. Khách chỉ được hủy khi đơn còn "Chờ xác nhận";
 // quản trị viên được hủy trước khi giao. Hủy đơn sẽ hoàn lại tồn kho và lượt dùng mã giảm giá.
-export async function changeOrderStatus(code, nextStatus, { actorId = null, customerPhone = null } = {}) {
+// customerId: khi khách tự hủy, chỉ được hủy đơn thuộc tài khoản của mình.
+export async function changeOrderStatus(code, nextStatus, { actorId = null, customerId = null } = {}) {
   return withTransaction(async (conn) => {
-    const [[order]] = await conn.query('SELECT id, status, phone, coupon_code FROM orders WHERE code = ? FOR UPDATE', [code]);
-    if (!order || (customerPhone !== null && order.phone !== customerPhone)) {
+    const [[order]] = await conn.query('SELECT id, status, user_id, coupon_code FROM orders WHERE code = ? FOR UPDATE', [code]);
+    if (!order || (customerId !== null && order.user_id !== customerId)) {
       throw new HttpError(404, 'Không tìm thấy đơn hàng');
     }
-    const cancellable = customerPhone !== null ? ['cho_xac_nhan'] : ['cho_xac_nhan', 'da_xac_nhan'];
+    const cancellable = customerId !== null ? ['cho_xac_nhan'] : ['cho_xac_nhan', 'da_xac_nhan'];
     const allowed = nextStatus === 'da_huy' ? cancellable.includes(order.status) : NEXT_STATUS[order.status] === nextStatus;
     if (!allowed) {
       throw new HttpError(409, `Không thể chuyển đơn từ "${STATUS_LABEL[order.status]}" sang "${STATUS_LABEL[nextStatus]}"`);

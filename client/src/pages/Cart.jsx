@@ -1,28 +1,40 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../components/Icon.jsx';
-import { CheckoutSteps, ProductImage, QtyStepper } from '../components/ui.jsx';
+import { CheckoutSteps, Loading, ProductImage, QtyStepper } from '../components/ui.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
-import { api } from '../api.js';
 import { formatVnd } from '../format.js';
 
 export default function Cart() {
-  const { items, count, subtotal, update, remove, sync } = useCart();
-  const { user } = useAuth();
-  const [notice, setNotice] = useState('');
+  const { items, count, subtotal, update, remove, reload, changed, clearChanged, cartReady } = useCart();
+  const { user, ready } = useAuth();
+  const [error, setError] = useState('');
 
-  // Đối chiếu giỏ hàng với giá và tồn kho hiện tại trên server
+  // Mở trang giỏ hàng: tải lại giá và tồn kho mới nhất từ máy chủ
   useEffect(() => {
-    if (items.length === 0) return;
-    api(`/products/batch?ids=${items.map((it) => it.productId).join(',')}`)
-      .then((fresh) => {
-        if (sync(fresh)) setNotice('Một số sản phẩm đã thay đổi giá, số lượng còn lại hoặc ngừng bán. Giỏ hàng đã được cập nhật.');
-      })
-      .catch(() => {});
-    // Chỉ kiểm tra một lần khi mở trang
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (user) reload();
+  }, [user, reload]);
+  useEffect(() => () => clearChanged(), [clearChanged]);
+
+  const run = (action) => {
+    setError('');
+    action().catch((err) => setError(err.message));
+  };
+
+  if (ready && !user) {
+    return (
+      <div className="container page">
+        <div className="empty-state">
+          <span className="icon-circle"><Icon name="cart" size={38} /></span>
+          <h1 style={{ fontSize: 28 }}>Đăng nhập để dùng giỏ hàng</h1>
+          <p className="muted" style={{ margin: 0 }}>Giỏ hàng được lưu theo tài khoản. Đăng nhập hoặc đăng ký để thêm sản phẩm và đặt hàng.</p>
+          <Link to="/dang-nhap" state={{ from: '/gio-hang', reason: 'cart' }} className="btn btn-dark btn-lg">Đăng nhập</Link>
+        </div>
+      </div>
+    );
+  }
+  if (!cartReady) return <div className="container page"><Loading /></div>;
 
   return (
     <div className="container page">
@@ -31,7 +43,12 @@ export default function Cart() {
         <h1 style={{ fontSize: 40, fontWeight: 800 }}>Giỏ hàng</h1>
         <span className="chip" style={{ height: 32, fontSize: 14 }}>{count} sản phẩm</span>
       </div>
-      {notice && <p className="alert alert-info" role="status" style={{ marginTop: 0 }}>{notice}</p>}
+      {changed && (
+        <p className="alert alert-info" role="status" style={{ marginTop: 0 }}>
+          Một số sản phẩm đã hết hàng, ngừng bán hoặc còn ít hơn số lượng trong giỏ. Giỏ hàng đã được cập nhật.
+        </p>
+      )}
+      {error && <p className="alert alert-error" role="alert" style={{ marginTop: 0 }}>{error}</p>}
 
       {items.length === 0 ? (
         <div className="empty-state">
@@ -53,9 +70,9 @@ export default function Cart() {
                   <Link to={`/san-pham/${it.slug}`} style={{ fontSize: 16, fontWeight: 600, textDecoration: 'none' }}>{it.name}</Link>
                   <span className="muted" style={{ fontSize: 14 }}>Đơn giá: {formatVnd(it.price)}</span>
                 </div>
-                <QtyStepper value={it.quantity} max={Math.min(99, it.stock ?? 99)} onChange={(q) => update(it.productId, q)} label={it.name} />
+                <QtyStepper value={it.quantity} max={Math.min(99, it.stock ?? 99)} onChange={(q) => run(() => update(it.productId, q))} label={it.name} />
                 <span className="line-total">{formatVnd(it.price * it.quantity)}</span>
-                <button type="button" className="btn btn-icon" aria-label={`Xóa ${it.name} khỏi giỏ`} onClick={() => remove(it.productId)}>
+                <button type="button" className="btn btn-icon" aria-label={`Xóa ${it.name} khỏi giỏ`} onClick={() => run(() => remove(it.productId))}>
                   <Icon name="trash" />
                 </button>
               </article>
@@ -71,19 +88,11 @@ export default function Cart() {
             <div className="summary-row"><span>Phí vận chuyển</span><span className="muted" style={{ textAlign: 'right' }}>Tính khi thanh toán</span></div>
             <hr className="divider" />
             <div className="summary-row"><span style={{ fontWeight: 700, fontSize: 17 }}>Tạm tính</span><span className="summary-total">{formatVnd(subtotal)}</span></div>
-            {user ? (
-              <Link to="/thanh-toan" className="btn btn-accent btn-lg btn-block">
-                Tiến hành thanh toán <Icon name="arrowRight" strokeWidth={2.4} />
-              </Link>
-            ) : (
-              <Link to="/dang-nhap" state={{ from: '/thanh-toan' }} className="btn btn-accent btn-lg btn-block">
-                Đăng nhập để đặt hàng <Icon name="arrowRight" strokeWidth={2.4} />
-              </Link>
-            )}
+            <Link to="/thanh-toan" className="btn btn-accent btn-lg btn-block">
+              Tiến hành thanh toán <Icon name="arrowRight" strokeWidth={2.4} />
+            </Link>
             <p className="muted" style={{ margin: 0, fontSize: 13, textAlign: 'center' }}>
-              {user
-                ? 'Bạn có thể chọn thanh toán khi nhận hàng (COD) ở bước tiếp theo.'
-                : 'Cần đăng nhập hoặc đăng ký tài khoản để đặt hàng. Giỏ hàng của bạn vẫn được giữ nguyên.'}
+              Bạn có thể chọn thanh toán khi nhận hàng (COD) ở bước tiếp theo.
             </p>
           </aside>
         </div>

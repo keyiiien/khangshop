@@ -119,3 +119,16 @@ CREATE TABLE reviews (
   CONSTRAINT uq_reviews_product_user UNIQUE (product_id, user_id),
   CONSTRAINT chk_reviews_rating CHECK (rating BETWEEN 1 AND 5)
 ) ENGINE = InnoDB;
+
+-- Giỏ hàng lưu theo tài khoản (thêm vào giỏ cần đăng nhập): mỗi tài khoản một dòng cho một sản phẩm
+CREATE TABLE cart_items (
+  user_id    INT UNSIGNED NOT NULL,
+  product_id INT UNSIGNED NOT NULL,
+  quantity   INT UNSIGNED NOT NULL,
+  added_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, product_id),
+  CONSTRAINT fk_cart_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_cart_product FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE,
+  CONSTRAINT chk_cart_quantity CHECK (quantity BETWEEN 1 AND 99)
+) ENGINE = InnoDB;

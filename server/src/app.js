@@ -12,6 +12,7 @@ import authRoutes from './routes/auth.js';
 import { categoryRouter, productRouter } from './routes/catalog.js';
 import orderRoutes from './routes/orders.js';
 import couponRoutes from './routes/coupons.js';
+import cartRoutes from './routes/cart.js';
 import reviewRoutes from './routes/reviews.js';
 import adminRoutes from './routes/admin.js';
 
@@ -50,6 +51,7 @@ export function createApp() {
   app.use('/api/products', productRouter);
   app.use('/api/orders', orderRoutes);
   app.use('/api/coupons', couponRoutes);
+  app.use('/api/cart', cartRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api', (req, res) => res.status(404).json({ message: 'Không tìm thấy API' }));
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon.jsx';
-import { CheckoutSteps, ProductImage } from '../components/ui.jsx';
+import { CheckoutSteps, Loading, ProductImage } from '../components/ui.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { api } from '../api.js';
@@ -35,7 +35,7 @@ function Field({ id, label, error, required, hint, children }) {
 export default function Checkout() {
   const navigate = useNavigate();
   const { user, ready } = useAuth();
-  const { items, subtotal, clear } = useCart();
+  const { items, subtotal, reload: reloadCart, cartReady } = useCart();
   const [form, setForm] = useState({
     fullName: user?.fullName ?? '',
     phone: user?.phone ?? '',
@@ -67,9 +67,10 @@ export default function Checkout() {
     }));
   }, [user]);
 
-  if (items.length === 0 && !submitting) return <Navigate to="/gio-hang" replace />;
-  // Đặt hàng bắt buộc đăng nhập; giỏ hàng vẫn giữ nguyên, đăng nhập xong quay lại trang này
+  // Đặt hàng bắt buộc đăng nhập; đăng nhập xong quay lại trang này
   if (ready && !user) return <Navigate to="/dang-nhap" state={{ from: '/thanh-toan' }} replace />;
+  if (!cartReady) return <div className="container page"><Loading /></div>;
+  if (items.length === 0 && !submitting) return <Navigate to="/gio-hang" replace />;
 
   const fee = SHIPPING[form.shippingMethod].fee;
   const discount = coupon?.discount ?? 0;
@@ -125,7 +126,7 @@ export default function Checkout() {
           couponCode: coupon?.code,
         },
       });
-      clear();
+      reloadCart();   // máy chủ đã bỏ các sản phẩm vừa đặt khỏi giỏ
       navigate(`/don-hang/${result.code}`, { state: { justPlaced: true } });
     } catch (err) {
       setSubmitError(err.message);

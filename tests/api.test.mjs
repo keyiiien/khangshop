@@ -78,6 +78,23 @@ const userToken = userLogin.data.token;
 const me = await call('/auth/me', { token: userToken });
 check('me', me.data.user.email === 'thu@example.com');
 
+// Giỏ hàng: lưu theo tài khoản, phải đăng nhập
+const lowStock = (await call('/products?q=GC-006')).data.items[0];   // sản phẩm mẫu chỉ còn 3 cái
+const hiddenId = (await call('/admin/products?q=XD-009', { token: (await call('/auth/login', { method: 'POST', body: { login: 'admin@dailycart.local', password: 'Admin@123' } })).data.token })).data.items[0].id;
+check('cart without login 401', (await call('/cart')).status === 401 && (await call('/cart/items', { method: 'POST', body: { productId: tn.id } })).status === 401);
+const cart0 = await call('/cart', { token: userToken });
+check('new account has an empty cart', cart0.status === 200 && cart0.data.items.length === 0);
+await call('/cart/items', { method: 'POST', token: userToken, body: { productId: tn.id, quantity: 1 } });
+const cart1 = await call('/cart/items', { method: 'POST', token: userToken, body: { productId: tn.id, quantity: 2 } });
+check('add to cart twice adds up quantity', cart1.data.items.length === 1 && cart1.data.items[0].quantity === 3 && cart1.data.items[0].price === tn.price, JSON.stringify(cart1.data));
+const cart2 = await call('/cart/items', { method: 'POST', token: userToken, body: { productId: lowStock.id, quantity: 10 } });
+check('cart quantity limited to stock', cart2.data.items.find((it) => it.productId === lowStock.id)?.quantity === lowStock.stock, JSON.stringify(cart2.data.items));
+const cart3 = await call(`/cart/items/${tn.id}`, { method: 'PUT', token: userToken, body: { quantity: 1 } });
+const cart4 = await call(`/cart/items/${lowStock.id}`, { method: 'DELETE', token: userToken });
+check('update and remove cart items', cart3.data.items.find((it) => it.productId === tn.id).quantity === 1 && cart4.data.items.length === 1);
+check('hidden product cannot be added 404', (await call('/cart/items', { method: 'POST', token: userToken, body: { productId: hiddenId } })).status === 404);
+check('sold-out product cannot be added 409', (await call('/cart/items', { method: 'POST', token: userToken, body: { productId: (await call('/products?q=KC-007')).data.items[0].id } })).status === 409);
+
 // Đặt hàng
 const stockBefore = (await call(`/products/${tn.slug}`)).data.product.stock;
 const order = await call('/orders', {
@@ -94,6 +111,7 @@ check('create order', order.status === 201 && /^DH\d{6}-\d{4}$/.test(order.data.
 check('order total = 2*price + 50000', order.data.total === tn.price * 2 + 50000, order.data.total);
 const stockAfter = (await call(`/products/${tn.slug}`)).data.product.stock;
 check('stock decreased by 2', stockAfter === stockBefore - 2, `${stockBefore} -> ${stockAfter}`);
+check('ordered products removed from cart', (await call('/cart', { token: userToken })).data.items.length === 0);
 
 const kc = (await call('/products?q=KC-007')).data.items[0];
 const guestOrder = await call('/orders', {

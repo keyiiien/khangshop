@@ -1,95 +1,65 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { api } from '../api.js';
+import { useAuth } from './AuthContext.jsx';
 
-const CART_KEY = 'dailycart.cart';
-const MAX_QTY = 99;
 const CartContext = createContext(null);
 
-function loadCart() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(CART_KEY));
-    return Array.isArray(saved) ? saved : [];
-  } catch {
-    return [];
-  }
-}
-
-// Giỏ hàng lưu ở trình duyệt; giá cuối cùng luôn do server tính lại khi đặt hàng
+// Giỏ hàng lưu trên máy chủ theo tài khoản (bảng cart_items): phải đăng nhập mới thêm vào giỏ được.
+// Giá, tồn kho luôn lấy mới từ máy chủ; giá cuối cùng vẫn do máy chủ tính lại khi đặt hàng.
 export function CartProvider({ children }) {
-  const [items, setItems] = useState(loadCart);
-  const itemsRef = useRef(items);
+  const { user, ready } = useAuth();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [changed, setChanged] = useState(false);   // máy chủ vừa điều chỉnh giỏ (hết hàng, giảm số lượng…)
+  const [loadedFor, setLoadedFor] = useState(null); // giỏ đã tải xong cho tài khoản nào
 
-  useEffect(() => {
-    itemsRef.current = items;
+  const apply = useCallback((cart) => {
+    setItems(cart.items);
+    if (cart.changed) setChanged(true);
+    return cart;
+  }, []);
+
+  const reload = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
     try {
-      localStorage.setItem(CART_KEY, JSON.stringify(items));
+      apply(await api('/cart'));
     } catch {
-      // bỏ qua nếu trình duyệt không cho lưu
+      // giữ nguyên giỏ đang hiển thị nếu không tải được
+    } finally {
+      setLoadedFor(user.id);
+      setLoading(false);
     }
-  }, [items]);
+  }, [user, apply]);
 
-  const limitFor = (stock) => Math.max(0, Math.min(MAX_QTY, stock ?? MAX_QTY));
+  // Đăng nhập thì tải giỏ của tài khoản, đăng xuất thì giỏ rỗng
+  useEffect(() => {
+    if (!ready) return;
+    if (user) reload();
+    else setItems([]);
+  }, [ready, user, reload]);
 
-  const add = useCallback((product, quantity = 1) => {
-    setItems((current) => {
-      const existing = current.find((it) => it.productId === product.id);
-      const max = limitFor(product.stock);
-      if (existing) {
-        return current.map((it) =>
-          it.productId === product.id ? { ...it, quantity: Math.min(max, it.quantity + quantity), stock: product.stock } : it,
-        );
-      }
-      return [
-        ...current,
-        {
-          productId: product.id,
-          slug: product.slug,
-          name: product.name,
-          price: product.price,
-          imageUrl: product.imageUrl,
-          category: product.category?.name,
-          stock: product.stock,
-          quantity: Math.min(max, quantity),
-        },
-      ];
-    });
-  }, []);
-
-  const update = useCallback((productId, quantity) => {
-    setItems((current) =>
-      current.map((it) => (it.productId === productId ? { ...it, quantity: Math.max(1, Math.min(limitFor(it.stock), quantity)) } : it)),
-    );
-  }, []);
-
-  const remove = useCallback((productId) => {
-    setItems((current) => current.filter((it) => it.productId !== productId));
-  }, []);
-
-  const clear = useCallback(() => setItems([]), []);
-
-  // Cập nhật giá, tên, tồn kho mới nhất từ server; bỏ sản phẩm đã ngừng bán.
-  // Trả về true nếu giỏ hàng bị thay đổi để báo cho khách biết.
-  const sync = useCallback((freshProducts) => {
-    const byId = new Map(freshProducts.map((p) => [p.id, p]));
-    let changed = false;
-    const next = itemsRef.current.flatMap((it) => {
-      const p = byId.get(it.productId);
-      if (!p || p.stock === 0) {
-        changed = true;
-        return [];
-      }
-      const quantity = Math.min(it.quantity, limitFor(p.stock));
-      if (p.price !== it.price || quantity !== it.quantity) changed = true;
-      return [{ ...it, name: p.name, slug: p.slug, price: p.price, imageUrl: p.imageUrl, stock: p.stock, quantity }];
-    });
-    setItems(next);
-    return changed;
-  }, []);
+  // Các thao tác trả về Promise; lỗi (hết hàng, chưa đăng nhập…) được ném ra để nơi gọi hiển thị
+  const add = useCallback(
+    (product, quantity = 1) => api('/cart/items', { method: 'POST', body: { productId: product.id, quantity } }).then(apply),
+    [apply],
+  );
+  const update = useCallback(
+    (productId, quantity) => api(`/cart/items/${productId}`, { method: 'PUT', body: { quantity } }).then(apply),
+    [apply],
+  );
+  const remove = useCallback((productId) => api(`/cart/items/${productId}`, { method: 'DELETE' }).then(apply), [apply]);
+  const clearChanged = useCallback(() => setChanged(false), []);
 
   const value = useMemo(() => {
     const count = items.reduce((sum, it) => sum + it.quantity, 0);
     const subtotal = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
-    return { items, count, subtotal, add, update, remove, clear, sync };
-  }, [items, add, update, remove, clear, sync]);
+    // cartReady: đã biết chắc nội dung giỏ (khách chưa đăng nhập: giỏ rỗng)
+    const cartReady = ready && (!user || loadedFor === user.id);
+    return {
+      items, count, subtotal, loading, changed, cartReady, add, update, remove, reload, clearChanged,
+    };
+  }, [items, loading, changed, ready, user, loadedFor, add, update, remove, reload, clearChanged]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import Icon from '../components/Icon.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import Reviews from '../components/Reviews.jsx';
 import { ErrorBox, Loading, ProductImage, QtyStepper, Stars } from '../components/ui.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { discountPercent, formatVnd } from '../format.js';
@@ -12,6 +13,9 @@ export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { add, items } = useCart();
+  const { user } = useAuth();
+  const location = useLocation();
+  const [cartError, setCartError] = useState('');
   const { data, error, loading, reload } = useApi(`/products/${slug}`);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -40,9 +44,20 @@ export default function ProductDetail() {
   const maxQty = Math.max(0, Math.min(99, product.stock) - inCart);
   const soldOut = product.stock === 0;
 
-  function addToCart() {
-    add(product, qty);
-    setAdded(true);
+  // Thêm vào giỏ cần đăng nhập. thenGoToCart: nút "Mua ngay" chuyển luôn sang giỏ hàng
+  async function addToCart(thenGoToCart = false) {
+    if (!user) {
+      navigate('/dang-nhap', { state: { from: location.pathname, reason: 'cart' } });
+      return;
+    }
+    setCartError('');
+    try {
+      if (maxQty > 0) await add(product, Math.min(qty, maxQty));
+      if (thenGoToCart) navigate('/gio-hang');
+      else setAdded(true);
+    } catch (err) {
+      setCartError(err.message);
+    }
   }
 
   return (
@@ -111,7 +126,7 @@ export default function ProductDetail() {
           )}
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-            <button type="button" className="btn btn-lg btn-shadow" style={{ flex: '1 1 200px' }} disabled={soldOut || maxQty === 0} onClick={addToCart}>
+            <button type="button" className="btn btn-lg btn-shadow" style={{ flex: '1 1 200px' }} disabled={soldOut || maxQty === 0} onClick={() => addToCart()}>
               <Icon name="cart" /> Thêm vào giỏ
             </button>
             <button
@@ -119,14 +134,12 @@ export default function ProductDetail() {
               className="btn btn-lg btn-dark"
               style={{ flex: '1 1 200px' }}
               disabled={soldOut}
-              onClick={() => {
-                if (maxQty > 0) add(product, qty);
-                navigate('/gio-hang');
-              }}
+              onClick={() => addToCart(true)}
             >
               Mua ngay <Icon name="arrowRight" size={18} strokeWidth={2.4} />
             </button>
           </div>
+          {cartError && <p className="alert alert-error" role="alert" style={{ margin: 0 }}>{cartError}</p>}
           {maxQty === 0 && !soldOut && (
             <p className="alert alert-info" style={{ margin: 0 }}>Bạn đã thêm toàn bộ số lượng còn lại vào giỏ.</p>
           )}

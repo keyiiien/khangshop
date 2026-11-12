@@ -128,6 +128,8 @@ export async function createOrder({ customer, shippingMethod, paymentMethod, ite
     await conn.query('INSERT INTO order_status_history (order_id, status, changed_by) VALUES (?, ?, ?)', [
       orderId, 'cho_xac_nhan', userId ?? null,
     ]);
+    // Sản phẩm đã đặt được bỏ khỏi giỏ hàng của tài khoản
+    await conn.query('DELETE FROM cart_items WHERE user_id = ? AND product_id IN (?)', [userId, ids]);
     const [[{ code }]] = await conn.query('SELECT code FROM orders WHERE id = ?', [orderId]);
     return { code, total, discount };
   });

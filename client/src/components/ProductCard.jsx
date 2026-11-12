@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from './Icon.jsx';
 import { ProductImage, Stars } from './ui.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { discountPercent, formatVnd } from '../format.js';
 
 export default function ProductCard({ product }) {
   const { add } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [added, setAdded] = useState(false);
+  const [error, setError] = useState('');
   const url = `/san-pham/${product.slug}`;
   const soldOut = product.stock === 0;
 
@@ -16,6 +21,21 @@ export default function ProductCard({ product }) {
     const timer = setTimeout(() => setAdded(false), 1500);
     return () => clearTimeout(timer);
   }, [added]);
+
+  // Thêm vào giỏ cần đăng nhập: khách chưa đăng nhập được chuyển sang trang đăng nhập rồi quay lại trang này
+  async function addToCart() {
+    if (!user) {
+      navigate('/dang-nhap', { state: { from: location.pathname + location.search, reason: 'cart' } });
+      return;
+    }
+    setError('');
+    try {
+      await add(product, 1);
+      setAdded(true);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 
   return (
     <article className="product-card">
@@ -47,16 +67,14 @@ export default function ProductCard({ product }) {
           type="button"
           className="btn"
           disabled={soldOut}
-          onClick={() => {
-            add(product, 1);
-            setAdded(true);
-          }}
+          onClick={addToCart}
           aria-label={soldOut ? `${product.name} đã hết hàng` : `Thêm ${product.name} vào giỏ`}
           style={added ? { background: 'var(--mint)' } : undefined}
         >
           <Icon name={added ? 'check' : 'plus'} size={18} strokeWidth={2.6} />
           <span aria-live="polite">{soldOut ? 'Hết hàng' : added ? 'Đã thêm vào giỏ' : 'Thêm vào giỏ'}</span>
         </button>
+        {error && <span className="field-error" role="alert">{error}</span>}
       </div>
     </article>
   );

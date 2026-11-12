@@ -18,8 +18,8 @@ Tên cửa hàng hiển thị trên web là **DailyCart**. Tên kho mã nguồn,
 - Danh sách sản phẩm: tìm kiếm, lọc theo danh mục, khoảng giá, đang giảm giá, còn hàng; sắp xếp; phân trang
 - Chi tiết sản phẩm, sản phẩm tương tự
 - Đánh giá sản phẩm: điểm trung bình, số đánh giá theo từng mức sao; khách đã nhận hàng được chấm 1–5 sao kèm nhận xét, sửa hoặc xóa đánh giá của mình
-- Giỏ hàng (lưu trên trình duyệt, tự đối chiếu giá và tồn kho với máy chủ)
-- Đặt hàng (bắt buộc đăng nhập; giỏ hàng vẫn dùng được khi chưa đăng nhập và được giữ nguyên sau khi đăng nhập); chọn giao tiêu chuẩn/giao nhanh, thanh toán COD/chuyển khoản
+- Giỏ hàng lưu trên máy chủ theo tài khoản (cần đăng nhập mới thêm vào giỏ); luôn hiện giá, tồn kho mới nhất
+- Đặt hàng (bắt buộc đăng nhập); chọn giao tiêu chuẩn/giao nhanh, thanh toán COD/chuyển khoản
 - Mã giảm giá ở trang thanh toán (giảm theo % có mức tối đa hoặc giảm số tiền cố định)
 - Theo dõi đơn trong mục "Đơn hàng của tôi"; tự hủy đơn khi đơn còn "Chờ xác nhận"
 - Đăng ký, đăng nhập, xem "Đơn hàng của tôi"
@@ -38,7 +38,8 @@ Tên cửa hàng hiển thị trên web là **DailyCart**. Tên kho mã nguồn,
 - Giá và tổng tiền luôn tính lại ở máy chủ, không tin giá gửi từ trình duyệt
 - Đặt hàng chạy trong transaction, khóa dòng sản phẩm (`SELECT … FOR UPDATE`) để không bán quá tồn kho
 - Luồng trạng thái: Chờ xác nhận → Đã xác nhận → Đang giao → Đã giao; chỉ được đi tới bước kế tiếp
-- Đặt hàng bắt buộc đăng nhập; mỗi đơn gắn với tài khoản đặt, khách chỉ xem và hủy được đơn của chính mình
+- Thêm vào giỏ và đặt hàng bắt buộc đăng nhập; mỗi đơn gắn với tài khoản đặt, khách chỉ xem và hủy được đơn của chính mình
+- Giỏ hàng (bảng `cart_items`) không cho số lượng vượt tồn kho; sản phẩm hết hàng hoặc ngừng bán tự bỏ khỏi giỏ; đặt hàng xong thì các sản phẩm đã đặt rời khỏi giỏ
 - Hủy đơn: khách hủy được khi "Chờ xác nhận", quản trị viên hủy được trước khi giao; hủy thì hoàn lại kho
 - Mỗi lần đổi trạng thái được ghi vào bảng `order_status_history`
 - Mã giảm giá chỉ giảm trên tiền hàng; khi đặt hàng máy chủ khóa dòng mã, kiểm tra lại điều kiện và tăng số lượt dùng trong cùng transaction; hủy đơn thì trả lại lượt dùng
@@ -116,7 +117,7 @@ Những lần sau chỉ cần `npm start` (đã cài và build rồi). Nếu t�
 
 ## Kiểm thử tự động
 
-Thư mục `tests/` gồm 90 kịch bản kiểm thử API và 34 kịch bản kiểm thử giao diện (Chrome không giao diện).
+Thư mục `tests/` gồm 98 kịch bản kiểm thử API và 37 kịch bản kiểm thử giao diện (Chrome không giao diện).
 Các kịch bản thay đổi dữ liệu, nên chạy trên CSDL mẫu vừa tạo lại:
 
 ```bash
@@ -159,7 +160,7 @@ khangshop/
     ├── database/truy_van_mau.sql   Truy vấn mẫu để xem dữ liệu
     ├── scripts/init-db.js  Tạo CSDL + dữ liệu mẫu
     └── src/
-        ├── routes/         auth, catalog (danh mục, sản phẩm), orders, coupons, reviews,
+        ├── routes/         auth, catalog (danh mục, sản phẩm), cart, orders, coupons, reviews,
         │                   admin, adminReports (thống kê), adminPromo (mã giảm giá, đánh giá)
         ├── services/       Nghiệp vụ đơn hàng, sản phẩm, mã giảm giá
         ├── middleware/     Xác thực JWT, phân quyền
@@ -180,6 +181,8 @@ khangshop/
 | GET | `/api/products/:slug/reviews` | Đánh giá của sản phẩm: điểm trung bình, phân bố sao, danh sách |
 | POST | `/api/products/:slug/reviews` | Gửi hoặc sửa đánh giá của mình (cần đăng nhập, đã nhận hàng) |
 | DELETE | `/api/products/:slug/reviews/mine` | Xóa đánh giá của mình |
+| GET | `/api/cart` | Giỏ hàng của tài khoản đang đăng nhập |
+| POST, PUT, DELETE | `/api/cart/items…` | Thêm, đổi số lượng, xóa sản phẩm trong giỏ |
 | POST | `/api/coupons/check` | Kiểm tra mã giảm giá với giỏ hàng hiện tại |
 | POST | `/api/orders` | Đặt hàng, cần đăng nhập (có thể kèm `couponCode`) |
 | GET | `/api/orders/mine` | Đơn của tài khoản đang đăng nhập |

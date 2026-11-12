@@ -92,6 +92,21 @@ await page.keyboard.press('Escape');
 await go(page, '/san-pham?q=tai%20nghe');
 check('search results', (await page.$$('.product-card')).length >= 1);
 
+// Chưa đăng nhập: bấm "Thêm vào giỏ" thì được chuyển sang trang đăng nhập, đăng nhập xong quay lại sản phẩm
+await go(page, '/san-pham/tai-nghe-bluetooth-chong-on-chu-dong');
+await clickText(page, '.detail-info button', 'Thêm vào giỏ');
+await page.waitForSelector('#dn-tk');
+check('add to cart requires login: login page with notice', (await page.content()).includes('để thêm sản phẩm vào giỏ hàng'));
+await go(page, '/gio-hang');
+check('guest cart page asks to log in', (await page.content()).includes('Đăng nhập để dùng giỏ hàng'));
+await clickText(page, '.empty-state a', 'Đăng nhập');
+await page.waitForSelector('#dn-tk');
+await page.type('#dn-tk', 'khach@dailycart.local');
+await page.type('#dn-mk', 'Khach@123');
+await page.click('.auth-form form button[type="submit"]');
+await page.waitForFunction(() => location.pathname === '/gio-hang');
+check('after login: back to the cart page', true);
+
 await go(page, '/san-pham/tai-nghe-bluetooth-chong-on-chu-dong');
 await page.click('.qty button[aria-label="Tăng số lượng"]');
 await clickText(page, '.detail-info button', 'Thêm vào giỏ');
@@ -101,24 +116,21 @@ await shot(page, '03-detail');
 
 await go(page, '/san-pham/binh-giu-nhiet-inox-750ml');
 await clickText(page, '.detail-info button', 'Thêm vào giỏ');
+await page.waitForSelector('.alert-success');
 
 await go(page, '/gio-hang');
+await page.waitForSelector('.cart-line');
 check('cart: 2 lines', (await page.$$('.cart-line')).length === 2);
 await page.click('.cart-line:nth-of-type(2) .qty button[aria-label="Tăng số lượng"]');
-check('cart: badge 4', (await page.$eval('.site-header .badge', (el) => el.textContent)) === '4');
+await page.waitForFunction(() => document.querySelector('.site-header .badge')?.textContent === '4');
+check('cart: badge 4 (saved on the server)', true);
 await shot(page, '04-cart');
+await page.reload({ waitUntil: 'networkidle0' });
+check('cart kept after reload (stored per account)', (await page.$$('.cart-line')).length === 2);
 
-// Chưa đăng nhập: giỏ hàng mời đăng nhập, đăng nhập xong quay lại trang thanh toán, giỏ hàng giữ nguyên
-await clickText(page, 'a', 'Đăng nhập để đặt hàng');
-await page.waitForSelector('#dn-tk');
-check('checkout requires login: login page with notice', (await page.content()).includes('Vui lòng đăng nhập hoặc đăng ký để đặt hàng'));
-await page.type('#dn-tk', 'khach@dailycart.local');
-await page.type('#dn-mk', 'Khach@123');
-await page.click('.auth-form form button[type="submit"]');
+await clickText(page, 'a', 'Tiến hành thanh toán');
 await page.waitForSelector('#tt-fullName');
-check('after login: back to checkout, cart kept, contact prefilled', page.url().endsWith('/thanh-toan')
-  && (await page.$eval('.site-header .badge', (el) => el.textContent)) === '4'
-  && (await page.$eval('#tt-phone', (el) => el.value)) === '0900000012');
+check('checkout: contact prefilled from account', (await page.$eval('#tt-phone', (el) => el.value)) === '0900000012');
 // Gửi khi chưa điền địa chỉ: phải báo lỗi
 await clickText(page, 'button[type="submit"]', 'Đặt hàng');
 check('checkout: validation errors shown', (await page.$$('.field-error')).length >= 4);
@@ -151,7 +163,8 @@ try {
 check('order placed', (await page.$eval('h1', (el) => el.textContent)).includes('Đặt hàng thành công'));
 check('bank info shown', (await page.content()).includes('Thông tin chuyển khoản'));
 check('order shows coupon discount', (await page.content()).includes('Giảm giá (KHANG10)'));
-check('cart cleared', (await page.$eval('.site-header .badge', (el) => el.textContent)) === '0');
+await page.waitForFunction(() => document.querySelector('.site-header .badge')?.textContent === '0', { timeout: 5000 }).catch(() => {});
+check('ordered items removed from cart', (await page.$eval('.site-header .badge', (el) => el.textContent)) === '0');
 const orderCode = page.url().split('/').pop();
 await shot(page, '06-order-success');
 

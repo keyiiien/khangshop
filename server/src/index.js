@@ -1,9 +1,15 @@
+import os from 'node:os';
 import { config } from './config.js';
 import { createApp } from './app.js';
 import { pool } from './db.js';
 
 const server = createApp().listen(config.port, () => {
   console.log(`DailyCart đang chạy tại http://localhost:${config.port}`);
+  // Địa chỉ trong mạng nội bộ: điện thoại, máy khác cùng Wi-Fi mở được website
+  const lan = Object.values(os.networkInterfaces()).flat()
+    .filter((a) => a.family === 'IPv4' && !a.internal)
+    .map((a) => `http://${a.address}:${config.port}`);
+  if (lan.length) console.log(`Điện thoại, máy khác cùng mạng Wi-Fi mở: ${lan.join(' hoặc ')}`);
 });
 
 server.on('error', (err) => {

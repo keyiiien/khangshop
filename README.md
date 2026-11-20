@@ -98,6 +98,9 @@ Những lần sau chỉ cần `npm start` (đã cài và build rồi). Nếu t�
 - Tạo lại dữ liệu mẫu từ đầu (xóa hết dữ liệu đang có): `npm run db:reset`. Dữ liệu mẫu gồm 8 danh mục, 96 sản phẩm
   có ảnh, 8 đơn hàng đang xử lý, lịch sử 40 đơn trong 30 ngày của 5 khách hàng mẫu, 50 đánh giá, 4 mã giảm giá:
   `KHANG10`, `GIAM30K`, `CHAOBAN`, `HE2026` (đã hết hạn).
+- Mở trên điện thoại: điện thoại và máy tính dùng chung một mạng Wi-Fi, mở địa chỉ mà `npm start` in ra ở dòng
+  "Điện thoại, máy khác cùng mạng Wi-Fi mở: http://192.168.x.x:4000". Nếu Windows hỏi tường lửa cho Node.js thì chọn
+  Allow; điện thoại không vào được thì kiểm tra lại tường lửa và hai thiết bị có cùng mạng không.
 - Khi đang sửa code: `npm run dev:server` và `npm run dev:client` (2 cửa sổ), mở http://localhost:5173.
 - Xem dữ liệu bằng MySQL Workbench: các câu truy vấn mẫu ở `server/database/truy_van_mau.sql`.
 - Ảnh sản phẩm mẫu nằm ở `server/database/anh-san-pham/`, nguồn và giấy phép từng ảnh ghi trong
@@ -199,4 +202,4 @@ khangshop/
 
 ## Hướng phát triển
 
-Thanh toán trực tuyến (VNPay/MoMo sandbox), gửi email xác nhận đơn, quên mật khẩu qua email, nhiều ảnh cho một sản phẩm, giới hạn số lần tra cứu đơn để chống dò mã.
+Triển khai lên máy chủ Internet (tên miền, HTTPS), thanh toán trực tuyến (VNPay/MoMo sandbox), gửi email xác nhận đơn, quên mật khẩu qua email, nhiều ảnh cho một sản phẩm, giới hạn số lần đăng nhập sai.
